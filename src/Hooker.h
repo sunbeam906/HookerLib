@@ -26,6 +26,8 @@
 
 #include "IHooker.h"
 
+extern HANDLE hHeap;
+
 class Hooker : public IHooker {
 private:
 	HMODULE hModule;

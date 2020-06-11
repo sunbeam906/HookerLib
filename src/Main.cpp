@@ -36,6 +36,7 @@ extern "C" BOOL __stdcall HookMain(HMODULE, DWORD fdwReason, LPVOID)
 {
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
+		hHeap = GetProcessHeap();
 		Hooker mainHooker(GetModuleHandle(NULL));
 		PatchMain(&mainHooker);
 	}

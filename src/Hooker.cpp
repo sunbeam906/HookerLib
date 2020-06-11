@@ -86,12 +86,12 @@ extern "C"
 #pragma optimize("s", on)
 VOID* Hooker::operator new(size_t size)
 {
-	return HeapAlloc(GetProcessHeap(), NULL, size);
+	return HeapAlloc(hHeap, NULL, size);
 }
 
 VOID Hooker::operator delete(VOID* p)
 {
-	HeapFree(GetProcessHeap(), NULL, p);
+	HeapFree(hHeap, NULL, p);
 }
 
 Hooker::Hooker(HMODULE hModule)
