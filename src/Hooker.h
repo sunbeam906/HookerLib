@@ -56,6 +56,7 @@ public:
 	BOOL ReadDWord(DWORD, DWORD*);
 	BOOL PatchRedirect(DWORD, DWORD, RedirectType, DWORD = 0);
 	BOOL PatchJump(DWORD, DWORD);
+	BOOL PatchBlock(DWORD, CHAR*);
 	BOOL PatchHook(DWORD, VOID*, DWORD = 0);
 	BOOL PatchCall(DWORD, VOID*, DWORD = 0);
 	BOOL PatchSet(DWORD, BYTE, DWORD);

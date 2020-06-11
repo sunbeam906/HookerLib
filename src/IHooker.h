@@ -139,6 +139,14 @@ public:
 	virtual BOOL PatchNop(DWORD address, DWORD size);
 
 	/// <summary>
+	/// Writes new data block from string
+	/// </summary>
+	/// <param name="address"></param>
+	/// <param name="block"></param>
+	/// <returns></returns>
+	virtual BOOL PatchBlock(DWORD address, CHAR* block);
+
+	/// <summary>
 	/// Writes new data block
 	/// </summary>
 	/// <param name="address"></param>

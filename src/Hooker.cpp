@@ -268,6 +268,97 @@ BOOL Hooker::PatchNop(DWORD addr, DWORD size)
 	return this->PatchSet(addr, 0x90, size);
 }
 
+BOOL Hooker::PatchBlock(DWORD addr, CHAR* block)
+{
+	CHAR* ch = block;
+	DWORD bt = 0;
+	BOOL b = FALSE;
+	DWORD size = 0;
+	while (*ch)
+	{
+		if (*ch == ' ')
+		{
+			if (b)
+			{
+				bt = 0;
+				++size;
+				b = FALSE;
+			}
+		}
+		else
+		{
+			if (bt > 0xF)
+				return FALSE;
+
+			bt <<= 4;
+			if (*ch >= '0' && *ch <= '9')
+				bt += *ch - '0';
+			else if (*ch >= 'A' && *ch <= 'F')
+				bt += *ch - 'A' + 10;
+			else if (*ch >= 'a' && *ch <= 'f')
+				bt += *ch - 'a' + 10;
+			else
+				return FALSE;
+
+			b = TRUE;
+		}
+
+		++ch;
+	}
+
+	if (b)
+		++size;
+	else if (!size)
+		return FALSE;
+
+	DWORD address = addr + this->baseOffset;
+
+	DWORD old_prot;
+	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
+	{
+		BYTE* dst = (BYTE*)address;
+
+		ch = block;
+		bt = 0;
+		b = FALSE;
+
+		while (*ch)
+		{
+			if (*ch == ' ')
+			{
+				if (b)
+				{
+					*dst++ = LOBYTE(bt);
+					bt = 0;
+					b = FALSE;
+				}
+			}
+			else
+			{
+				bt <<= 4;
+				if (*ch >= '0' && *ch <= '9')
+					bt += *ch - '0';
+				else if (*ch >= 'A' && *ch <= 'F')
+					bt += *ch - 'A' + 10;
+				else
+					bt += *ch - 'a' + 10;
+
+				b = TRUE;
+			}
+
+			++ch;
+		}
+
+		if (b)
+			*dst++ = LOBYTE(bt);
+
+		VirtualProtect((VOID*)address, size, old_prot, &old_prot);
+
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL Hooker::PatchBlock(DWORD addr, VOID* block, DWORD size)
 {
 	DWORD address = addr + this->baseOffset;
