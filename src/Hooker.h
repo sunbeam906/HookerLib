@@ -24,50 +24,52 @@
 
 #pragma once
 
-#include "IHooker.h"
+enum RedirectType
+{
+	REDIRECT_CALL = 0xE8,
+	REDIRECT_JUMP = 0xE9,
+	REDIRECT_JUMP_SHORT = 0xEB
+};
 
-extern HANDLE hHeap;
+//typedef VOID* HOOKER;
 
-class Hooker : public IHooker {
-private:
+typedef struct Hooker {
+	HANDLE hHeap;
 	HMODULE hModule;
 	PIMAGE_NT_HEADERS headNT;
 	DWORD baseOffset;
 	VOID* mapAddress;
 	HANDLE hFile;
 	HANDLE hMap;
+} * HOOKER;
 
-	BOOL MapFile();
-	VOID UnmapFile();
+extern "C"
+{
+	BOOL MapFile(HOOKER);
+	VOID UnmapFile(HOOKER);
+	VOID CreateInner(HOOKER, HANDLE, HMODULE);
+	VOID ReleaseInner(HOOKER);
 
-public:
-	VOID* operator new(size_t);
-	VOID operator delete(VOID*);
-
-	Hooker(HMODULE);
-	~Hooker();
-
-	VOID Release();
-
-	DWORD GetBaseOffset();
-	HMODULE GetModuleHandle();
-
-	BOOL ReadBlock(DWORD, VOID*, DWORD);
-	BOOL ReadByte(DWORD, BYTE*);
-	BOOL ReadWord(DWORD, WORD*);
-	BOOL ReadDWord(DWORD, DWORD*);
-	BOOL PatchRedirect(DWORD, DWORD, RedirectType, DWORD = 0);
-	BOOL PatchJump(DWORD, DWORD);
-	BOOL PatchBlock(DWORD, CHAR*);
-	BOOL PatchHook(DWORD, VOID*, DWORD = 0);
-	BOOL PatchCall(DWORD, VOID*, DWORD = 0);
-	BOOL PatchSet(DWORD, BYTE, DWORD);
-	BOOL PatchNop(DWORD, DWORD);
-	BOOL PatchBlock(DWORD, VOID*, DWORD);
-	BOOL PatchByte(DWORD, BYTE);
-	BOOL PatchWord(DWORD, WORD);
-	BOOL PatchDWord(DWORD, DWORD);
-	DWORD PatchImport(const CHAR*, VOID*);
-	DWORD PatchExport(const CHAR*, VOID*);
-	DWORD PatchEntry(VOID*);
-};
+	HOOKER CreateHooker(HMODULE);
+	VOID ReleaseHooker(HOOKER);
+	DWORD GetBaseOffset(HOOKER);
+	HMODULE GetHookerHandle(HOOKER);
+	BOOL ReadBlock(HOOKER, DWORD, VOID*, DWORD);
+	BOOL ReadByte(HOOKER, DWORD, BYTE*);
+	BOOL ReadWord(HOOKER, DWORD, WORD*);
+	BOOL ReadDWord(HOOKER, DWORD, DWORD*);
+	BOOL PatchRedirect(HOOKER, DWORD, DWORD, RedirectType, DWORD = 0);
+	BOOL PatchJump(HOOKER, DWORD, DWORD);
+	BOOL PatchHex(HOOKER, DWORD, CHAR*);
+	BOOL PatchBlock(HOOKER, DWORD, VOID*, DWORD);
+	BOOL PatchHook(HOOKER, DWORD, VOID*, DWORD = 0);
+	BOOL PatchCall(HOOKER, DWORD, VOID*, DWORD = 0);
+	BOOL PatchSet(HOOKER, DWORD, BYTE, DWORD);
+	BOOL PatchNop(HOOKER, DWORD, DWORD);
+	BOOL PatchByte(HOOKER, DWORD, BYTE);
+	BOOL PatchWord(HOOKER, DWORD, WORD);
+	BOOL PatchDWord(HOOKER, DWORD, DWORD);
+	DWORD PatchImport(HOOKER, const CHAR*, VOID*);
+	DWORD PatchExport(HOOKER, const CHAR*, VOID*);
+	DWORD PatchEntry(HOOKER, VOID*);
+}

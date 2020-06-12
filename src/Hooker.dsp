@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /O1 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /FD /c
+# ADD CPP /nologo /Gz /W3 /O1 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /FD /c
 # SUBTRACT CPP /u /YX
 # ADD BASE RSC /l 0x422 /d "NDEBUG"
 # ADD RSC /l 0x422 /d "NDEBUG"
@@ -108,10 +108,6 @@ SOURCE=.\Main.cpp
 # Begin Source File
 
 SOURCE=.\Hooker.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\IHooker.h
 # End Source File
 # End Group
 # End Target

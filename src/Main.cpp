@@ -25,21 +25,20 @@
 #include "windows.h"
 #include "Hooker.h"
 
-VOID PatchMain(IHooker*);
-
-IHooker* CreateHooker(HMODULE hModule)
+extern "C"
 {
-	return new Hooker(hModule);
-}
+	VOID PatchMain(HOOKER);
 
-extern "C" BOOL __stdcall HookMain(HMODULE, DWORD fdwReason, LPVOID)
-{
-	if (fdwReason == DLL_PROCESS_ATTACH)
+	BOOL HookMain(HMODULE, DWORD fdwReason, LPVOID)
 	{
-		hHeap = GetProcessHeap();
-		Hooker mainHooker(GetModuleHandle(NULL));
-		PatchMain(&mainHooker);
-	}
+		if (fdwReason == DLL_PROCESS_ATTACH)
+		{
+			Hooker hokker;
+			CreateInner(&hokker, NULL, GetModuleHandle(NULL));
+			PatchMain(&hokker);
+			ReleaseInner(&hokker);
+		}
 
-	return TRUE;
+		return TRUE;
+	}
 }
