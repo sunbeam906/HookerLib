@@ -36,7 +36,7 @@ extern "C"
 			Hooker hokker;
 			CreateInner(&hokker, NULL, GetModuleHandle(NULL));
 			PatchMain(&hokker);
-			ReleaseInner(&hokker);
+			//ReleaseInner(&hokker);
 		}
 
 		return TRUE;
