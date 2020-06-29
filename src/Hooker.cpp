@@ -489,6 +489,10 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr)
 
 DWORD PatchEntry(HOOKER hooker, VOID* entryPoint)
 {
-	return PatchHook(hooker, (DWORD)hooker->hModule + hooker->headNT->OptionalHeader.AddressOfEntryPoint, entryPoint);
+	DWORD res = (DWORD)this->hModule + this->headNT->OptionalHeader.AddressOfEntryPoint;
+	if (PatchHook(hooker, res, entryPoint))
+		return res + this->baseOffset;
+
+	return NULL;
 }
 #pragma optimize("", on)
