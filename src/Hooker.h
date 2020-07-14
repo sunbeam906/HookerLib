@@ -53,11 +53,12 @@ extern "C"
 	HOOKER CreateHooker(HMODULE);
 	VOID ReleaseHooker(HOOKER);
 	DWORD GetBaseOffset(HOOKER);
-	HMODULE GetHookerHandle(HOOKER);
+	HMODULE GetHookerModule(HOOKER);
 	BOOL ReadBlock(HOOKER, DWORD, VOID*, DWORD);
 	BOOL ReadByte(HOOKER, DWORD, BYTE*);
 	BOOL ReadWord(HOOKER, DWORD, WORD*);
 	BOOL ReadDWord(HOOKER, DWORD, DWORD*);
+	DWORD FindBlock(HOOKER, VOID*, DWORD);
 	BOOL PatchRedirect(HOOKER, DWORD, DWORD, RedirectType, DWORD = 0);
 	BOOL PatchJump(HOOKER, DWORD, DWORD);
 	BOOL PatchHex(HOOKER, DWORD, CHAR*);
@@ -69,7 +70,8 @@ extern "C"
 	BOOL PatchByte(HOOKER, DWORD, BYTE);
 	BOOL PatchWord(HOOKER, DWORD, WORD);
 	BOOL PatchDWord(HOOKER, DWORD, DWORD);
-	DWORD PatchImport(HOOKER, const CHAR*, VOID*);
-	DWORD PatchExport(HOOKER, const CHAR*, VOID*);
+	DWORD RedirectCall(HOOKER, DWORD, VOID*);
+	DWORD PatchImport(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
+	DWORD PatchExport(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
 	DWORD PatchEntry(HOOKER, VOID*);
 }

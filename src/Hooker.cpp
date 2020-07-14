@@ -160,7 +160,7 @@ DWORD GetBaseOffset(HOOKER hooker)
 	return hooker->baseOffset;
 }
 
-HMODULE GetHookerHandle(HOOKER hooker)
+HMODULE GetHookerModule(HOOKER hooker)
 {
 	return hooker->hModule;
 }
@@ -192,22 +192,51 @@ BOOL ReadBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 
 		return TRUE;
 	}
+
 	return FALSE;
 }
 
 BOOL ReadByte(HOOKER hooker, DWORD addr, BYTE* value)
 {
-	return ReadBlock(hooker, addr, value, sizeof(*value));
+	return ReadBlock(hooker, addr, value, sizeof(BYTE));
 }
 
 BOOL ReadWord(HOOKER hooker, DWORD addr, WORD* value)
 {
-	return ReadBlock(hooker, addr, value, sizeof(*value));
+	return ReadBlock(hooker, addr, value, sizeof(WORD));
 }
 
 BOOL ReadDWord(HOOKER hooker, DWORD addr, DWORD* value)
 {
-	return ReadBlock(hooker, addr, value, sizeof(*value));
+	return ReadBlock(hooker, addr, value, sizeof(DWORD));
+}
+
+DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size)
+{
+	IMAGE_SECTION_HEADER* section = IMAGE_FIRST_SECTION(hooker->headNT);
+	for (DWORD idx = 0; idx < hooker->headNT->FileHeader.NumberOfSections; ++idx, ++section)
+	{
+		if (section->VirtualAddress == hooker->headNT->OptionalHeader.BaseOfCode && section->Misc.VirtualSize)
+		{
+			BYTE* entry = (BYTE*)(hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress + hooker->baseOffset);
+			DWORD total = section->Misc.VirtualSize;
+			do
+			{
+				BYTE* ptr1 = entry;
+				BYTE* ptr2 = (BYTE*)block;
+
+				DWORD count = size;
+				while (*ptr1++ == *ptr2++ && --count);
+
+				if (!count)
+					return (DWORD)entry - hooker->baseOffset;
+
+				++entry;
+			} while (--total);
+		}
+	}
+
+	return NULL;
 }
 
 BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWORD nop)
@@ -406,7 +435,17 @@ BOOL PatchDWord(HOOKER hooker, DWORD addr, DWORD value)
 	return PatchBlock(hooker, addr, &value, sizeof(value));
 }
 
-DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr)
+DWORD RedirectCall(HOOKER hooker, DWORD addr, VOID* hook)
+{
+	BYTE block[5];
+	if (ReadBlock(hooker, addr, block, sizeof(block)) && block[0] == 0xE8 &&
+		PatchCall(hooker, addr, hook))
+		return addr + 5 + *(DWORD*)&block[1] + hooker->baseOffset;
+
+	return NULL;
+}
+
+DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)
 {
 	PIMAGE_DATA_DIRECTORY dataDir = &hooker->headNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 	if (dataDir->Size)
@@ -416,8 +455,10 @@ DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr)
 		{
 			PIMAGE_THUNK_DATA addressThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + imports->FirstThunk);
 			PIMAGE_THUNK_DATA nameThunk;
-			if (imports->OriginalFirstThunk)
-				nameThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + imports->OriginalFirstThunk);
+
+			DWORD nameInternal = imports->OriginalFirstThunk;
+			if (nameInternal)
+				nameThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + nameInternal);
 			else if (MapFile(hooker))
 			{
 				PIMAGE_NT_HEADERS headNT = (PIMAGE_NT_HEADERS)((DWORD)hooker->mapAddress + ((PIMAGE_DOS_HEADER)hooker->mapAddress)->e_lfanew);
@@ -444,16 +485,22 @@ DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr)
 
 			for (; nameThunk->u1.AddressOfData; ++nameThunk, ++addressThunk)
 			{
-				PIMAGE_IMPORT_BY_NAME name = PIMAGE_IMPORT_BY_NAME((DWORD)hooker->hModule + nameThunk->u1.AddressOfData);
+				PIMAGE_IMPORT_BY_NAME name = PIMAGE_IMPORT_BY_NAME((DWORD)hooker->hModule + (DWORD)nameThunk->u1.AddressOfData);
 
 				WORD hint;
-				if (ReadWord(hooker, (INT)name - hooker->baseOffset, &hint) && !StrCompare((CHAR*)name->Name, function))
+				if (ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint) && !StrCompare((CHAR*)&name->Name, function))
 				{
 					DWORD res;
-					if (ReadDWord(hooker, (INT)&addressThunk->u1.AddressOfData - hooker->baseOffset, &res))
+					DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
+					if (ReadDWord(hooker, address, &res) && PatchDWord(hooker, address, (DWORD)addr))
 					{
-						PatchDWord(hooker, (INT)&addressThunk->u1.AddressOfData - hooker->baseOffset, (DWORD)addr);
-						return res;
+						if (old_val)
+							*old_val = res;
+
+						if (nameInternal)
+							PatchSet(hooker, (DWORD)name->Name - hooker->baseOffset, NULL, 1);
+
+						return address;
 					}
 
 					return NULL;
@@ -465,7 +512,7 @@ DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr)
 	return NULL;
 }
 
-DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr)
+DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)
 {
 	DWORD func = (DWORD)GetProcAddress(hooker->hModule, function);
 	if (func)
@@ -477,9 +524,22 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr)
 			{
 				DWORD* functions = (DWORD*)((DWORD)hooker->hModule + exports->AddressOfFunctions);
 
-				for (DWORD i = 0; i < exports->NumberOfFunctions; ++i)
-					if (func == (DWORD)hooker->hModule + functions[i])
-						return PatchDWord(hooker, (DWORD)&functions[i] - hooker->baseOffset, (DWORD)addr - (DWORD)hooker->hModule);
+				DWORD count = exports->NumberOfFunctions;
+				while (count--)
+				{
+					DWORD res;
+					if (func == (DWORD)hooker->hModule + *functions &&
+						ReadDWord(hooker, (DWORD)functions - hooker->baseOffset, &res) &&
+						PatchDWord(hooker, (DWORD)functions - hooker->baseOffset, (DWORD)addr - (DWORD)hooker->hModule))
+					{
+						if (old_val)
+							*old_val = res;
+
+						return (DWORD)functions - hooker->baseOffset;
+					}
+
+					++functions;
+				}
 			}
 		}
 	}
@@ -489,9 +549,9 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr)
 
 DWORD PatchEntry(HOOKER hooker, VOID* entryPoint)
 {
-	DWORD res = (DWORD)hooker->hModule + hooker->headNT->OptionalHeader.AddressOfEntryPoint;
+	DWORD res = (DWORD)hooker->hModule + hooker->headNT->OptionalHeader.AddressOfEntryPoint - hooker->baseOffset;
 	if (PatchHook(hooker, res, entryPoint))
-		return res + hooker->baseOffset;
+		return res;
 
 	return NULL;
 }
