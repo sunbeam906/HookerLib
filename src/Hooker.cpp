@@ -251,7 +251,12 @@ BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWO
 		BYTE* jump = (BYTE*)address;
 		*jump = LOBYTE(type);
 		++jump;
-		*(DWORD*)jump = dest - address - size;
+
+		LONG val = dest - address - size;
+		if (type == REDIRECT_JUMP_SHORT)
+			*(BYTE*)jump = *(BYTE*)&val;
+		else
+			*(DWORD*)jump = *(DWORD*)&val;
 
 		if (nop)
 			MemorySet((VOID*)(address + size), 0x90, nop);
