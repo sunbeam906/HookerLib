@@ -74,4 +74,5 @@ extern "C"
 	DWORD PatchImport(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
 	DWORD PatchExport(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
 	DWORD PatchEntry(HOOKER, VOID*);
+	VOID RedirectImports(HOOKER, const CHAR*, HMODULE);
 }
