@@ -107,9 +107,20 @@ extern "C"
 	/// <param name="hooker"></param>
 	/// <param name="block"></param>
 	/// <param name="size"></param>
+	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD __stdcall FindBlock(HOOKER, VOID* block, DWORD size, DWORD start = 0);
+	DWORD __stdcall FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags = 0, DWORD start = 0);
+	
+	/// <summary>
+	/// Find relative function call
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="flags"></param>
+	/// <param name="start"></param>
+	/// <returns></returns>
+	DWORD __stdcall FindCall(HOOKER hooker, DWORD address, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Write redirect to new address

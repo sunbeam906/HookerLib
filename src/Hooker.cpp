@@ -225,39 +225,91 @@ BOOL ReadDWord(HOOKER hooker, DWORD addr, DWORD* value)
 	return ReadBlock(hooker, addr, value, sizeof(DWORD));
 }
 
-DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD start)
+DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags, DWORD start)
 {
 	DWORD res = 0;
 
 	IMAGE_SECTION_HEADER* section = IMAGE_FIRST_SECTION(hooker->headNT);
 	for (DWORD idx = 0; idx < hooker->headNT->FileHeader.NumberOfSections; ++idx, ++section)
 	{
-		DWORD old_prot;
-		DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
-		if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
+		if (!flags || (section->Characteristics & flags) == flags)
 		{
-			BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
-			DWORD total = section->SizeOfRawData;
-			do
+			DWORD old_prot;
+			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
+			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				BYTE* ptr1 = entry;
-				BYTE* ptr2 = (BYTE*)block;
-
-				DWORD count = size;
-				while (*ptr1++ == *ptr2++ && --count);
-
-				if (!count)
+				BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
+				DWORD total = section->SizeOfRawData - size;
+				do
 				{
-					res = (DWORD)entry - hooker->baseOffset;
+					BYTE* ptr1 = entry;
+					BYTE* ptr2 = (BYTE*)block;
+
+					DWORD count = size;
+					while (*ptr1++ == *ptr2++ && --count);
+
+					if (!count)
+					{
+						res = (DWORD)entry - hooker->baseOffset;
+						break;
+					}
+
+					++entry;
+				} while (--total);
+
+				VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+				if (res)
 					break;
-				}
+			}
+		}
+	}
 
-				++entry;
-			} while (--total);
+	return res;
+}
 
-			VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
-			if (res)
-				break;
+DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
+{
+	DWORD res = 0;
+	BYTE block[5] = { 0xE8 };
+	LONG* ptr = (LONG*)&block[1];
+	addr += hooker->baseOffset;
+
+	IMAGE_SECTION_HEADER* section = IMAGE_FIRST_SECTION(hooker->headNT);
+	for (DWORD idx = 0; idx < hooker->headNT->FileHeader.NumberOfSections; ++idx, ++section)
+	{
+		if (!flags || (section->Characteristics & flags) == flags)
+		{
+			DWORD old_prot;
+			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
+			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
+			{
+				BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
+				*ptr = *(LONG*)&addr - (LONG)entry - sizeof(block);
+
+				DWORD total = section->SizeOfRawData - sizeof(block);
+				do
+				{
+					BYTE* ptr1 = entry;
+					BYTE* ptr2 = (BYTE*)block;
+
+					DWORD count = sizeof(block);
+					while (*ptr1++ == *ptr2++ && --count)
+						;
+
+					if (!count)
+					{
+						res = (DWORD)entry - hooker->baseOffset;
+						break;
+					}
+
+					++entry;
+					--*ptr;
+				} while (--total);
+
+				VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+				if (res)
+					break;
+			}
 		}
 	}
 
