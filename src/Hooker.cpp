@@ -225,15 +225,19 @@ BOOL ReadDWord(HOOKER hooker, DWORD addr, DWORD* value)
 	return ReadBlock(hooker, addr, value, sizeof(DWORD));
 }
 
-DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size)
+DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD start)
 {
+	DWORD res = 0;
+
 	IMAGE_SECTION_HEADER* section = IMAGE_FIRST_SECTION(hooker->headNT);
 	for (DWORD idx = 0; idx < hooker->headNT->FileHeader.NumberOfSections; ++idx, ++section)
 	{
-		if (section->VirtualAddress == hooker->headNT->OptionalHeader.BaseOfCode && section->Misc.VirtualSize)
+		DWORD old_prot;
+		DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
+		if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
 		{
-			BYTE* entry = (BYTE*)(hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress + hooker->baseOffset);
-			DWORD total = section->Misc.VirtualSize;
+			BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
+			DWORD total = section->SizeOfRawData;
 			do
 			{
 				BYTE* ptr1 = entry;
@@ -243,14 +247,21 @@ DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size)
 				while (*ptr1++ == *ptr2++ && --count);
 
 				if (!count)
-					return (DWORD)entry - hooker->baseOffset;
+				{
+					res = (DWORD)entry - hooker->baseOffset;
+					break;
+				}
 
 				++entry;
 			} while (--total);
+
+			VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+			if (res)
+				break;
 		}
 	}
 
-	return NULL;
+	return res;
 }
 
 BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWORD nop)

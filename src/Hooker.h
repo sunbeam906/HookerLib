@@ -31,8 +31,6 @@ enum RedirectType
 	REDIRECT_JUMP_SHORT = 0xEB
 };
 
-//typedef VOID* HOOKER;
-
 typedef struct Hooker {
 	HANDLE hHeap;
 	HMODULE hModule;
@@ -58,7 +56,7 @@ extern "C"
 	BOOL ReadByte(HOOKER, DWORD, BYTE*);
 	BOOL ReadWord(HOOKER, DWORD, WORD*);
 	BOOL ReadDWord(HOOKER, DWORD, DWORD*);
-	DWORD FindBlock(HOOKER, VOID*, DWORD);
+	DWORD FindBlock(HOOKER, VOID*, DWORD, DWORD = 0);
 	BOOL PatchRedirect(HOOKER, DWORD, DWORD, RedirectType, DWORD = 0);
 	BOOL PatchJump(HOOKER, DWORD, DWORD);
 	BOOL PatchHex(HOOKER, DWORD, CHAR*);
