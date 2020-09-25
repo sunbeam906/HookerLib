@@ -98,7 +98,7 @@ extern "C"
 }
 
 #pragma optimize("s", on)
-BOOL MapFile(HOOKER hooker)
+DWORD MapFile(HOOKER hooker)
 {
 	if (!hooker->mapAddress)
 	{
@@ -108,25 +108,25 @@ BOOL MapFile(HOOKER hooker)
 			GetModuleFileName(hooker->hModule, filePath, MAX_PATH);
 			hooker->hFile = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hooker->hFile == INVALID_HANDLE_VALUE)
-				return FALSE;
+				return NULL;
 		}
 
 		if (!hooker->hMap)
 		{
 			hooker->hMap = CreateFileMapping(hooker->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
 			if (!hooker->hMap)
-				return FALSE;
+				return NULL;
 		}
 
-		hooker->mapAddress = MapViewOfFile(hooker->hMap, FILE_MAP_READ, 0, 0, 0);
+		hooker->mapAddress = (DWORD)MapViewOfFile(hooker->hMap, FILE_MAP_READ, 0, 0, 0);
 	}
 
-	return (BOOL)hooker->mapAddress;
+	return hooker->mapAddress;
 }
 
 VOID UnmapFile(HOOKER hooker)
 {
-	if (hooker->mapAddress && UnmapViewOfFile(hooker->mapAddress))
+	if (hooker->mapAddress && UnmapViewOfFile((VOID*)hooker->mapAddress))
 		hooker->mapAddress = NULL;
 
 	if (hooker->hMap && CloseHandle(hooker->hMap))
@@ -527,7 +527,7 @@ DWORD RedirectCall(HOOKER hooker, DWORD addr, VOID* hook)
 	return NULL;
 }
 
-DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)
+DWORD PatchImport(HOOKER hooker, DWORD function, VOID* addr, DWORD* old_val)
 {
 	PIMAGE_DATA_DIRECTORY dataDir = &hooker->headNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 	if (dataDir->Size)
@@ -543,7 +543,7 @@ DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_va
 				nameThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + nameInternal);
 			else if (MapFile(hooker))
 			{
-				PIMAGE_NT_HEADERS headNT = (PIMAGE_NT_HEADERS)((DWORD)hooker->mapAddress + ((PIMAGE_DOS_HEADER)hooker->mapAddress)->e_lfanew);
+				PIMAGE_NT_HEADERS headNT = (PIMAGE_NT_HEADERS)(hooker->mapAddress + ((PIMAGE_DOS_HEADER)hooker->mapAddress)->e_lfanew);
 				PIMAGE_SECTION_HEADER sh = (PIMAGE_SECTION_HEADER)((DWORD)&headNT->OptionalHeader + headNT->FileHeader.SizeOfOptionalHeader);
 
 				nameThunk = NULL;
@@ -567,31 +567,46 @@ DWORD PatchImport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_va
 
 			for (; nameThunk->u1.AddressOfData; ++nameThunk, ++addressThunk)
 			{
-				PIMAGE_IMPORT_BY_NAME name = PIMAGE_IMPORT_BY_NAME((DWORD)hooker->hModule + (DWORD)nameThunk->u1.AddressOfData);
-
-				WORD hint;
-				if (ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint) && !StrCompare((CHAR*)&name->Name, function))
+				if ((nameThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG32) == (function & IMAGE_ORDINAL_FLAG32))
 				{
-					DWORD res;
-					DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
-					if (ReadDWord(hooker, address, &res) && PatchDWord(hooker, address, (DWORD)addr))
+					PIMAGE_IMPORT_BY_NAME name = PIMAGE_IMPORT_BY_NAME((DWORD)hooker->hModule + (DWORD)nameThunk->u1.AddressOfData);
+					
+					WORD hint;
+					BOOL isOrdianl = nameThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG32;
+					if (isOrdianl && nameThunk->u1.Ordinal == function ||
+						!isOrdianl && ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint) && !StrCompare((CHAR*)&name->Name, (const CHAR*)function))
 					{
-						if (old_val)
-							*old_val = res;
+						DWORD res;
+						DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
+						if (ReadDWord(hooker, address, &res) && PatchDWord(hooker, address, (DWORD)addr))
+						{
+							if (old_val)
+								*old_val = res;
 
-						if (nameInternal)
-							PatchSet(hooker, (DWORD)name->Name - hooker->baseOffset, NULL, 1);
+							if (nameInternal)
+								PatchSet(hooker, (DWORD)name->Name - hooker->baseOffset, NULL, 1);
 
-						return address;
+							return address;
+						}
+
+						return NULL;
 					}
-
-					return NULL;
 				}
 			}
 		}
 	}
 
 	return NULL;
+}
+
+DWORD PatchImportByName(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)
+{
+	return PatchImport(hooker, (DWORD)function, addr, old_val);
+}
+
+DWORD PatchImportByOrdinal(HOOKER hooker, DWORD ordinal, VOID* addr, DWORD* old_val)
+{
+	return PatchImport(hooker, ordinal | IMAGE_ORDINAL_FLAG32, addr, old_val);
 }
 
 DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)

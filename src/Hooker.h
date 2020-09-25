@@ -38,14 +38,14 @@ typedef struct Hooker {
 	HMODULE hModule;
 	PIMAGE_NT_HEADERS headNT;
 	DWORD baseOffset;
-	VOID* mapAddress;
+	DWORD mapAddress;
 	HANDLE hFile;
 	HANDLE hMap;
 } * HOOKER;
 
 extern "C"
 {
-	BOOL MapFile(HOOKER);
+	DWORD MapFile(HOOKER);
 	VOID UnmapFile(HOOKER);
 	VOID CreateInner(HOOKER, HANDLE, HMODULE);
 	VOID ReleaseInner(HOOKER);
@@ -72,7 +72,9 @@ extern "C"
 	BOOL PatchWord(HOOKER, DWORD, WORD);
 	BOOL PatchDWord(HOOKER, DWORD, DWORD);
 	DWORD RedirectCall(HOOKER, DWORD, VOID*);
-	DWORD PatchImport(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
+	DWORD PatchImport(HOOKER, DWORD, VOID*, DWORD* = NULL);
+	DWORD PatchImportByName(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
+	DWORD PatchImportByOrdinal(HOOKER, DWORD, VOID*, DWORD* = NULL);
 	DWORD PatchExport(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
 	DWORD PatchEntry(HOOKER, VOID*);
 	VOID RedirectImports(HOOKER, const CHAR*, HMODULE);

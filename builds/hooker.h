@@ -240,21 +240,31 @@ extern "C"
 	/// Redirects module imported function and retrives old address
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="funcName"></param>
+	/// <param name="name"></param>
 	/// <param name="funcAddress"></param>
 	/// <param name="old_value"></param>
 	/// <returns></returns>
-	DWORD __stdcall PatchImport(HOOKER hooker, const CHAR* funcName, VOID* funcAddress, DWORD* old_value = NULL);
+	DWORD __stdcall PatchImportByName(HOOKER hooker, const CHAR* name, VOID* funcAddress, DWORD* old_value = NULL);
+	
+	/// <summary>
+	/// Redirects module imported function and retrives old address
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="ordinal"></param>
+	/// <param name="funcAddress"></param>
+	/// <param name="old_value"></param>
+	/// <returns></returns>
+	DWORD __stdcall PatchImportByOrdinal(HOOKER hooker, DWORD ordinal, VOID* funcAddress, DWORD* old_value = NULL);
 
 	/// <summary>
 	/// Redirects module exported function and retrives old address
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="funcName"></param>
+	/// <param name="name"></param>
 	/// <param name="funcAddress"></param>
 	/// <param name="old_value"></param>
 	/// <returns></returns>
-	DWORD __stdcall PatchExport(HOOKER hooker, const CHAR* funcName, VOID* funcAddress, DWORD* old_value = NULL);
+	DWORD __stdcall PatchExport(HOOKER hooker, const CHAR* name, VOID* funcAddress, DWORD* old_value = NULL);
 
 	/// <summary>
 	/// Redirects module entry point and retrives old address
@@ -278,7 +288,7 @@ extern "C"
 	/// </summary>
 	/// <param name="hooker"></param>
 	/// <returns></returns>
-	BOOL __stdcall MapFile(HOOKER hooker);
+	DWORD __stdcall MapFile(HOOKER hooker);
 	
 	/// <summary>
 	/// Unmap module file from memory
