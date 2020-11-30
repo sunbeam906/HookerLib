@@ -27,16 +27,16 @@
 
 extern "C"
 {
-	VOID PatchMain(HOOKER);
+	VOID PatchMain(HOOKER, HMODULE);
 
-	BOOL HookMain(HMODULE, DWORD fdwReason, LPVOID)
+	BOOL HookMain(HMODULE hModule, DWORD fdwReason, LPVOID)
 	{
 		if (fdwReason == DLL_PROCESS_ATTACH)
 		{
 			Hooker hokker;
 			CreateInner(&hokker, NULL, GetModuleHandle(NULL));
-			PatchMain(&hokker);
-			//ReleaseInner(&hokker);
+			PatchMain(&hokker, hModule);
+			ReleaseInner(&hokker);
 		}
 
 		return TRUE;
