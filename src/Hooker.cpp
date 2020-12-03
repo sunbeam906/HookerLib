@@ -188,6 +188,9 @@ BOOL ReadBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 	{
 		switch (size)
 		{
+		case 8:
+			*(QWORD*)block = *(QWORD*)address;
+			break;
 		case 4:
 			*(DWORD*)block = *(DWORD*)address;
 			break;
