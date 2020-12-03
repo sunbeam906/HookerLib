@@ -212,17 +212,47 @@ BOOL ReadBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 
 BOOL ReadByte(HOOKER hooker, DWORD addr, BYTE* value)
 {
-	return ReadBlock(hooker, addr, value, sizeof(BYTE));
+	return ReadBlock(hooker, addr, value, sizeof(*value));
 }
 
 BOOL ReadWord(HOOKER hooker, DWORD addr, WORD* value)
 {
-	return ReadBlock(hooker, addr, value, sizeof(WORD));
+	return ReadBlock(hooker, addr, value, sizeof(*value));
 }
 
 BOOL ReadDWord(HOOKER hooker, DWORD addr, DWORD* value)
 {
-	return ReadBlock(hooker, addr, value, sizeof(DWORD));
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
+BOOL ReadQWord(HOOKER hooker, DWORD addr, QWORD* value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
+BOOL ReadShort(HOOKER hooker, DWORD addr, SHORT* value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
+BOOL ReadLong(HOOKER hooker, DWORD addr, LONG* value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
+BOOL ReadLongLong(HOOKER hooker, DWORD addr, LONGLONG* value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
+BOOL ReadFloat(HOOKER hooker, DWORD addr, FLOAT* value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
+BOOL ReadDouble(HOOKER hooker, DWORD addr, DOUBLE* value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
 }
 
 DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags, DWORD start)
@@ -542,6 +572,9 @@ BOOL PatchBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 	{
 		switch (size)
 		{
+		case 8:
+			*(QWORD*)address = *(QWORD*)block;
+			break;
 		case 4:
 			*(DWORD*)address = *(DWORD*)block;
 			break;
@@ -610,6 +643,36 @@ BOOL PatchWord(HOOKER hooker, DWORD addr, WORD value)
 }
 
 BOOL PatchDWord(HOOKER hooker, DWORD addr, DWORD value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
+}
+
+BOOL PatchQWord(HOOKER hooker, DWORD addr, QWORD value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
+}
+
+BOOL PatchShort(HOOKER hooker, DWORD addr, SHORT value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
+}
+
+BOOL PatchLong(HOOKER hooker, DWORD addr, LONG value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
+}
+
+BOOL PatchLongLong(HOOKER hooker, DWORD addr, LONGLONG value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
+}
+
+BOOL PatchFloat(HOOKER hooker, DWORD addr, FLOAT value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
+}
+
+BOOL PatchDouble(HOOKER hooker, DWORD addr, DOUBLE value)
 {
 	return PatchBlock(hooker, addr, &value, sizeof(value));
 }

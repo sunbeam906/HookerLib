@@ -23,8 +23,11 @@
 */
 
 #pragma once
-// #pragma comment(lib, "hooker.lib")
-// #pragma comment(linker, "/DLL /ENTRY:HookMain@12")
+
+#ifdef _HOOKER_LIB
+#pragma comment(lib, "hooker.lib")
+#pragma comment(linker, "/DLL /ENTRY:HookMain@12")
+#endif  // _HOOKER_LIB
 
 enum RedirectType
 {
@@ -34,6 +37,7 @@ enum RedirectType
 };
 
 typedef VOID* HOOKER;
+typedef unsigned __int64 QWORD;
 
 extern "C"
 {
@@ -100,6 +104,60 @@ extern "C"
 	/// <param name="lpValue"></param>
 	/// <returns></returns>
 	BOOL __stdcall ReadDWord(HOOKER hooker, DWORD address, DWORD* lpValue);
+
+	/// <summary>
+	/// Reads quad word value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="lpValue"></param>
+	/// <returns></returns>
+	BOOL __stdcall ReadQWord(HOOKER hooker, DWORD address, QWORD* lpValue);
+
+	/// <summary>
+	/// Reads short value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="lpValue"></param>
+	/// <returns></returns>
+	BOOL __stdcall ReadShort(HOOKER hooker, DWORD address, SHORT* lpValue);
+
+	/// <summary>
+	/// Reads long value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="lpValue"></param>
+	/// <returns></returns>
+	BOOL __stdcall ReadLong(HOOKER hooker, DWORD address, LONG* lpValue);
+
+	/// <summary>
+	/// Reads long long value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="lpValue"></param>
+	/// <returns></returns>
+	BOOL __stdcall ReadLongLong(HOOKER hooker, DWORD address, LONGLONG* lpValue);
+
+	/// <summary>
+	/// Reads float value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="lpValue"></param>
+	/// <returns></returns>
+	BOOL __stdcall ReadFloat(HOOKER hooker, DWORD address, FLOAT* lpValue);
+
+	/// <summary>
+	/// Reads double float value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="lpValue"></param>
+	/// <returns></returns>
+	BOOL __stdcall ReadDouble(HOOKER hooker, DWORD address, DOUBLE* lpValue);
 
 	/// <summary>
 	/// Find data block address
@@ -249,6 +307,60 @@ extern "C"
 	/// <param name="value"></param>
 	/// <returns></returns>
 	BOOL __stdcall PatchDWord(HOOKER hooker, DWORD address, DWORD value);
+
+	/// <summary>
+	/// Writes new quad word value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchQWord(HOOKER hooker, DWORD address, QWORD value);
+
+	/// <summary>
+	/// Writes new short value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchShort(HOOKER hooker, DWORD address, SHORT value);
+
+	/// <summary>
+	/// Writes new long value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchLong(HOOKER hooker, DWORD address, LONG value);
+
+	/// <summary>
+	/// Writes new long long value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchLongLong(HOOKER hooker, DWORD address, LONGLONG value);
+
+	/// <summary>
+	/// Writes new float value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchFloat(HOOKER hooker, DWORD address, FLOAT value);
+
+	/// <summary>
+	/// Writes new double float value
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchDouble(HOOKER hooker, DWORD address, DOUBLE value);
 
 	/// <summary>
 	/// Redirect relative call to new address

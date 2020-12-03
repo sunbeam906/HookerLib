@@ -32,6 +32,7 @@ enum RedirectType
 };
 
 //typedef VOID* HOOKER;
+typedef unsigned __int64 QWORD;
 
 typedef struct Hooker {
 	HANDLE hHeap;
@@ -58,6 +59,12 @@ extern "C"
 	BOOL ReadByte(HOOKER, DWORD, BYTE*);
 	BOOL ReadWord(HOOKER, DWORD, WORD*);
 	BOOL ReadDWord(HOOKER, DWORD, DWORD*);
+	BOOL ReadQWord(HOOKER, DWORD, QWORD*);
+	BOOL ReadShort(HOOKER, DWORD, SHORT*);
+	BOOL ReadLong(HOOKER, DWORD, LONG*);
+	BOOL ReadLongLong(HOOKER, DWORD, LONGLONG*);
+	BOOL ReadFloat(HOOKER, DWORD, FLOAT*);
+	BOOL ReadDouble(HOOKER, DWORD, DOUBLE*);
 	DWORD FindBlock(HOOKER, VOID*, DWORD, DWORD = 0, DWORD = 0);
 	DWORD FindBlockByMask(HOOKER, VOID*, VOID*, DWORD, DWORD = 0, DWORD = 0);
 	DWORD FindCall(HOOKER, DWORD, DWORD =0 , DWORD = 0);
@@ -73,6 +80,12 @@ extern "C"
 	BOOL PatchByte(HOOKER, DWORD, BYTE);
 	BOOL PatchWord(HOOKER, DWORD, WORD);
 	BOOL PatchDWord(HOOKER, DWORD, DWORD);
+	BOOL PatchQWord(HOOKER, DWORD, QWORD);
+	BOOL PatchShort(HOOKER, DWORD, SHORT);
+	BOOL PatchLong(HOOKER, DWORD, LONG);
+	BOOL PatchLongLong(HOOKER, DWORD, LONGLONG);
+	BOOL PatchFloat(HOOKER, DWORD, FLOAT);
+	BOOL PatchDouble(HOOKER, DWORD, DOUBLE);
 	DWORD RedirectCall(HOOKER, DWORD, VOID*);
 	DWORD PatchImport(HOOKER, DWORD, VOID*, DWORD* = NULL);
 	DWORD PatchImportByName(HOOKER, const CHAR*, VOID*, DWORD* = NULL);
