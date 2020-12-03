@@ -238,8 +238,9 @@ DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags, DWORD start
 			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
 			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
-				DWORD total = section->SizeOfRawData - size;
+				DWORD max = startAddress >= start ? startAddress : start;
+				BYTE* entry = (BYTE*)(max + hooker->baseOffset);
+				DWORD total = section->SizeOfRawData - size - max + startAddress;
 				do
 				{
 					BYTE* ptr1 = entry;
@@ -280,8 +281,9 @@ DWORD FindBlockByMask(HOOKER hooker, VOID* block, VOID* mask, DWORD size, DWORD 
 			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
 			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
-				DWORD total = section->SizeOfRawData - size;
+				DWORD max = startAddress >= start ? startAddress : start;
+				BYTE* entry = (BYTE*)(max + hooker->baseOffset);
+				DWORD total = section->SizeOfRawData - size - max + startAddress;
 				do
 				{
 					BYTE* ptr1 = entry;
@@ -341,10 +343,11 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
 			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
+				DWORD max = startAddress >= start ? startAddress : start;
+				BYTE* entry = (BYTE*)(max + hooker->baseOffset);
 				*ptr = *(LONG*)&addr - (LONG)entry - sizeof(block);
 
-				DWORD total = section->SizeOfRawData - sizeof(block);
+				DWORD total = section->SizeOfRawData - sizeof(block) - max + startAddress;
 				do
 				{
 					BYTE* ptr1 = entry;
