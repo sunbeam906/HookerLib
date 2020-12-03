@@ -267,6 +267,64 @@ DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags, DWORD start
 	return res;
 }
 
+DWORD FindBlockByMask(HOOKER hooker, VOID* block, VOID* mask, DWORD size, DWORD flags, DWORD start)
+{
+	DWORD res = 0;
+
+	IMAGE_SECTION_HEADER* section = IMAGE_FIRST_SECTION(hooker->headNT);
+	for (DWORD idx = 0; idx < hooker->headNT->FileHeader.NumberOfSections; ++idx, ++section)
+	{
+		if (!flags || (section->Characteristics & flags) == flags)
+		{
+			DWORD old_prot;
+			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
+			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
+			{
+				BYTE* entry = (BYTE*)((startAddress >= start ? startAddress : start) + hooker->baseOffset);
+				DWORD total = section->SizeOfRawData - size;
+				do
+				{
+					BYTE* ptr1 = entry;
+					BYTE* ptr2 = (BYTE*)block;
+					BYTE* msk = (BYTE*)mask;
+
+					BYTE m;
+					DWORD idx = 0;
+					DWORD count = size;
+					do
+					{
+						if (!(idx % 8))
+							m = *msk++;
+						else
+							m >>= 1;
+
+						if ((m & 1) && *ptr1 != *ptr2)
+							break;
+
+						++ptr1;
+						++ptr2;
+						++idx;
+					} while (--count);
+
+					if (!count)
+					{
+						res = (DWORD)entry - hooker->baseOffset;
+						break;
+					}
+
+					++entry;
+				} while (--total);
+
+				VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+				if (res)
+					break;
+			}
+		}
+	}
+
+	return res;
+}
+
 DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 {
 	DWORD res = 0;
@@ -494,6 +552,42 @@ BOOL PatchBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 			MemoryCopy((VOID*)address, block, size);
 			break;
 		}
+
+		VirtualProtect((VOID*)address, size, old_prot, &old_prot);
+
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL PatchBlockByMask(HOOKER hooker, DWORD addr, VOID* block, VOID* mask, DWORD size)
+{
+	DWORD address = addr + hooker->baseOffset;
+
+	DWORD old_prot;
+	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
+	{
+		BYTE* src = (BYTE*)block;
+		BYTE* dst = (BYTE*)address;
+		BYTE* msk = (BYTE*)mask;
+
+		BYTE m;
+		DWORD idx = 0;
+		DWORD count = size;
+		do
+		{
+			if (!(idx % 8))
+				m = *msk++;
+			else
+				m >>= 1;
+
+			if (m & 1)
+				*dst = *src;
+
+			++src;
+			++dst;
+			++idx;
+		} while (--count);
 
 		VirtualProtect((VOID*)address, size, old_prot, &old_prot);
 

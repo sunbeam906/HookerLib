@@ -113,6 +113,18 @@ extern "C"
 	DWORD __stdcall FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags = 0, DWORD start = 0);
 	
 	/// <summary>
+	/// Find data block address by bit mask
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="block"></param>
+	/// <param name="mask"></param>
+	/// <param name="size"></param>
+	/// <param name="flags"></param>
+	/// <param name="start"></param>
+	/// <returns></returns>
+	DWORD __stdcall FindBlockByMask(HOOKER hooker, VOID* block, VOID* mask, DWORD size, DWORD flags = 0, DWORD start = 0);
+	
+	/// <summary>
 	/// Find relative function call
 	/// </summary>
 	/// <param name="hooker"></param>
@@ -199,6 +211,17 @@ extern "C"
 	/// <param name="size"></param>
 	/// <returns></returns>
 	BOOL __stdcall PatchBlock(HOOKER hooker, DWORD address, VOID* block, DWORD size);
+	
+	/// <summary>
+	/// Writes new data block by bit mask
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="block"></param>
+	/// <param name="mask"></param>
+	/// <param name="size"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchBlockByMask(HOOKER hooker, DWORD address, VOID* block, VOID* mask, DWORD size);
 
 	/// <summary>
 	/// Writes new byte value
