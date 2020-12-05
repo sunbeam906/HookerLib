@@ -67,34 +67,6 @@ extern "C"
 			retn 12
 		}
 	}
-
-	BOOL __inline StrCompare(const CHAR* str1, const CHAR* str2)
-	{
-		while (*str1 == *str2)
-		{
-			if (!*str1)
-				return FALSE;
-
-			++str1;
-			++str2;
-		}
-
-		return TRUE;
-	}
-
-	BOOL __inline StrCompareInsensitive(const CHAR* str1, const CHAR* str2)
-	{
-		do
-		{
-			CHAR ch[2] = { *str1++, *str2++ };
-			CharUpperBuff(ch, sizeof(ch));
-			if (ch[0] != ch[1])
-				return TRUE;
-
-			if (!ch[0])
-				return FALSE;
-		} while (TRUE);
-	}
 }
 
 #pragma optimize("s", on)
@@ -737,7 +709,7 @@ DWORD PatchImport(HOOKER hooker, DWORD function, VOID* addr, DWORD* old_val)
 					WORD hint;
 					BOOL isOrdianl = nameThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG32;
 					if (isOrdianl && nameThunk->u1.Ordinal == function ||
-						!isOrdianl && ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint) && !StrCompare((CHAR*)&name->Name, (const CHAR*)function))
+						!isOrdianl && ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint) && !lstrcmp((CHAR*)&name->Name, (const CHAR*)function))
 					{
 						DWORD res;
 						DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
@@ -825,7 +797,7 @@ VOID RedirectImports(HOOKER hooker, const CHAR* libName, HMODULE hLib)
 		for (DWORD idx = 0; imports->Name; ++idx, ++imports)
 		{
 			CHAR* libraryName = (CHAR*)((DWORD)hooker->hModule + imports->Name);
-			if (!StrCompareInsensitive(libraryName, libName))
+			if (!lstrcmpi(libraryName, libName))
 			{
 				PIMAGE_THUNK_DATA addressThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + imports->FirstThunk);
 				PIMAGE_THUNK_DATA nameThunk;
