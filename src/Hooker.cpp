@@ -185,6 +185,11 @@ BOOL ReadBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 	return FALSE;
 }
 
+BOOL ReadPtr(HOOKER hooker, DWORD addr, VOID** value)
+{
+	return ReadBlock(hooker, addr, value, sizeof(*value));
+}
+
 BOOL ReadByte(HOOKER hooker, DWORD addr, BYTE* value)
 {
 	return ReadBlock(hooker, addr, value, sizeof(*value));
@@ -230,7 +235,7 @@ BOOL ReadDouble(HOOKER hooker, DWORD addr, DOUBLE* value)
 	return ReadBlock(hooker, addr, value, sizeof(*value));
 }
 
-DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags, DWORD start)
+DWORD FindBlock(HOOKER hooker, const VOID* block, DWORD size, DWORD flags, DWORD start)
 {
 	DWORD res = 0;
 
@@ -273,7 +278,7 @@ DWORD FindBlock(HOOKER hooker, VOID* block, DWORD size, DWORD flags, DWORD start
 	return res;
 }
 
-DWORD FindBlockByMask(HOOKER hooker, VOID* block, VOID* mask, DWORD size, DWORD flags, DWORD start)
+DWORD FindBlockByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD size, DWORD flags, DWORD start)
 {
 	DWORD res = 0;
 
@@ -417,12 +422,12 @@ BOOL PatchJump(HOOKER hooker, DWORD addr, DWORD dest)
 	return PatchRedirect(hooker, addr, dest, relative >= -128 && relative <= 127 ? REDIRECT_JUMP_SHORT : REDIRECT_JUMP, 0);
 }
 
-BOOL PatchHook(HOOKER hooker, DWORD addr, VOID* hook, DWORD nop)
+BOOL PatchHook(HOOKER hooker, DWORD addr, const VOID* hook, DWORD nop)
 {
 	return PatchRedirect(hooker, addr, (DWORD)hook, REDIRECT_JUMP, nop);
 }
 
-BOOL PatchCall(HOOKER hooker, DWORD addr, VOID* hook, DWORD nop)
+BOOL PatchCall(HOOKER hooker, DWORD addr, const VOID* hook, DWORD nop)
 {
 	return PatchRedirect(hooker, addr, (DWORD)hook, REDIRECT_CALL, nop);
 }
@@ -447,9 +452,9 @@ BOOL PatchNop(HOOKER hooker, DWORD addr, DWORD size)
 	return PatchSet(hooker, addr, 0x90, size);
 }
 
-BOOL PatchHex(HOOKER hooker, DWORD addr, CHAR* block)
+BOOL PatchHex(HOOKER hooker, DWORD addr, const CHAR* block)
 {
-	CHAR* ch = block;
+	const CHAR* ch = block;
 	DWORD bt = 0;
 	BOOL b = FALSE;
 	DWORD size = 0;
@@ -538,7 +543,7 @@ BOOL PatchHex(HOOKER hooker, DWORD addr, CHAR* block)
 	return FALSE;
 }
 
-BOOL PatchBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
+BOOL PatchBlock(HOOKER hooker, DWORD addr, const VOID* block, DWORD size)
 {
 	DWORD address = addr + hooker->baseOffset;
 
@@ -571,7 +576,7 @@ BOOL PatchBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 	return FALSE;
 }
 
-BOOL PatchBlockByMask(HOOKER hooker, DWORD addr, VOID* block, VOID* mask, DWORD size)
+BOOL PatchBlockByMask(HOOKER hooker, DWORD addr, const VOID* block, const VOID* mask, DWORD size)
 {
 	DWORD address = addr + hooker->baseOffset;
 
@@ -605,6 +610,11 @@ BOOL PatchBlockByMask(HOOKER hooker, DWORD addr, VOID* block, VOID* mask, DWORD 
 		return TRUE;
 	}
 	return FALSE;
+}
+
+BOOL PatchPtr(HOOKER hooker, DWORD addr, const VOID* value)
+{
+	return PatchBlock(hooker, addr, &value, sizeof(value));
 }
 
 BOOL PatchByte(HOOKER hooker, DWORD addr, BYTE value)
@@ -652,7 +662,7 @@ BOOL PatchDouble(HOOKER hooker, DWORD addr, DOUBLE value)
 	return PatchBlock(hooker, addr, &value, sizeof(value));
 }
 
-DWORD RedirectCall(HOOKER hooker, DWORD addr, VOID* hook)
+DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 {
 	BYTE block[5];
 	if (ReadBlock(hooker, addr, block, sizeof(block)) && block[0] == 0xE8 &&
@@ -662,7 +672,7 @@ DWORD RedirectCall(HOOKER hooker, DWORD addr, VOID* hook)
 	return NULL;
 }
 
-DWORD PatchImport(HOOKER hooker, DWORD function, VOID* addr, DWORD* old_val)
+DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_val)
 {
 	PIMAGE_DATA_DIRECTORY dataDir = &hooker->headNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 	if (dataDir->Size)
@@ -713,7 +723,7 @@ DWORD PatchImport(HOOKER hooker, DWORD function, VOID* addr, DWORD* old_val)
 					{
 						DWORD res;
 						DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
-						if (ReadDWord(hooker, address, &res) && PatchDWord(hooker, address, (DWORD)addr))
+						if (ReadDWord(hooker, address, &res) && PatchPtr(hooker, address, addr))
 						{
 							if (old_val)
 								*old_val = res;
@@ -734,17 +744,17 @@ DWORD PatchImport(HOOKER hooker, DWORD function, VOID* addr, DWORD* old_val)
 	return NULL;
 }
 
-DWORD PatchImportByName(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)
+DWORD PatchImportByName(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* old_val)
 {
 	return PatchImport(hooker, (DWORD)function, addr, old_val);
 }
 
-DWORD PatchImportByOrdinal(HOOKER hooker, DWORD ordinal, VOID* addr, DWORD* old_val)
+DWORD PatchImportByOrdinal(HOOKER hooker, DWORD ordinal, const VOID* addr, DWORD* old_val)
 {
 	return PatchImport(hooker, ordinal | IMAGE_ORDINAL_FLAG32, addr, old_val);
 }
 
-DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_val)
+DWORD PatchExport(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* old_val)
 {
 	DWORD func = (DWORD)GetProcAddress(hooker->hModule, function);
 	if (func)
@@ -779,7 +789,7 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, VOID* addr, DWORD* old_va
 	return NULL;
 }
 
-DWORD PatchEntry(HOOKER hooker, VOID* entryPoint)
+DWORD PatchEntry(HOOKER hooker, const VOID* entryPoint)
 {
 	DWORD res = (DWORD)hooker->hModule + hooker->headNT->OptionalHeader.AddressOfEntryPoint - hooker->baseOffset;
 	if (PatchHook(hooker, res, entryPoint))
@@ -840,9 +850,9 @@ VOID RedirectImports(HOOKER hooker, const CHAR* libName, HMODULE hLib)
 						DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
 						if (ReadDWord(hooker, address, &old))
 						{
-							DWORD addr = (DWORD)GetProcAddress(hLib, (CHAR*)name->Name);
+							FARPROC addr = GetProcAddress(hLib, (CHAR*)name->Name);
 							if (addr)
-								PatchDWord(hooker, address, (DWORD)addr);
+								PatchPtr(hooker, address, addr);
 						}
 					}
 				}
