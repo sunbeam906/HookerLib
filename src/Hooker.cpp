@@ -723,17 +723,27 @@ DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_va
 					{
 						DWORD res;
 						DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
-						if (ReadDWord(hooker, address, &res) && PatchPtr(hooker, address, addr))
+						if (ReadDWord(hooker, address, &res))
 						{
-							if (old_val)
-								*old_val = res;
+							if (addr)
+							{
+								if (PatchPtr(hooker, address, addr))
+								{
+									if (nameInternal)
+										PatchSet(hooker, (DWORD)name->Name - hooker->baseOffset, NULL, 1);
 
-							if (nameInternal)
-								PatchSet(hooker, (DWORD)name->Name - hooker->baseOffset, NULL, 1);
-
-							return address;
+									goto lbl_sucess;
+								}
+							}
+							else
+							{
+								lbl_sucess:;
+								if (old_val)
+									*old_val = res;
+								return address;
+							}
 						}
-
+						
 						return NULL;
 					}
 				}
@@ -772,7 +782,7 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* 
 					DWORD res;
 					if (func == (DWORD)hooker->hModule + *functions &&
 						ReadDWord(hooker, (DWORD)functions - hooker->baseOffset, &res) &&
-						PatchDWord(hooker, (DWORD)functions - hooker->baseOffset, (DWORD)addr - (DWORD)hooker->hModule))
+						(!addr || PatchDWord(hooker, (DWORD)functions - hooker->baseOffset, (DWORD)addr - (DWORD)hooker->hModule)))
 					{
 						if (old_val)
 							*old_val = res;
@@ -792,7 +802,7 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* 
 DWORD PatchEntry(HOOKER hooker, const VOID* entryPoint)
 {
 	DWORD res = (DWORD)hooker->hModule + hooker->headNT->OptionalHeader.AddressOfEntryPoint - hooker->baseOffset;
-	if (PatchHook(hooker, res, entryPoint))
+	if (!entryPoint || PatchHook(hooker, res, entryPoint))
 		return res;
 
 	return NULL;
