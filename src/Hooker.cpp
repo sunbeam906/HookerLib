@@ -672,8 +672,11 @@ DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 	return NULL;
 }
 
-DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_val)
+DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_val, BOOL erace)
 {
+	if (old_val)
+		*old_val = NULL;
+
 	PIMAGE_DATA_DIRECTORY dataDir = &hooker->headNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 	if (dataDir->Size)
 	{
@@ -729,7 +732,7 @@ DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_va
 							{
 								if (PatchPtr(hooker, address, addr))
 								{
-									if (nameInternal)
+									if (nameInternal && erace)
 										PatchSet(hooker, (DWORD)name->Name - hooker->baseOffset, NULL, 1);
 
 									goto lbl_sucess;
@@ -754,18 +757,21 @@ DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_va
 	return NULL;
 }
 
-DWORD PatchImportByName(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* old_val)
+DWORD PatchImportByName(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* old_val, BOOL erace)
 {
-	return PatchImport(hooker, (DWORD)function, addr, old_val);
+	return PatchImport(hooker, (DWORD)function, addr, old_val, erace);
 }
 
-DWORD PatchImportByOrdinal(HOOKER hooker, DWORD ordinal, const VOID* addr, DWORD* old_val)
+DWORD PatchImportByOrdinal(HOOKER hooker, DWORD ordinal, const VOID* addr, DWORD* old_val, BOOL erace)
 {
-	return PatchImport(hooker, ordinal | IMAGE_ORDINAL_FLAG32, addr, old_val);
+	return PatchImport(hooker, ordinal | IMAGE_ORDINAL_FLAG32, addr, old_val, erace);
 }
 
 DWORD PatchExport(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* old_val)
 {
+	if (old_val)
+		*old_val = NULL;
+
 	DWORD func = (DWORD)GetProcAddress(hooker->hModule, function);
 	if (func)
 	{
@@ -785,7 +791,7 @@ DWORD PatchExport(HOOKER hooker, const CHAR* function, const VOID* addr, DWORD* 
 						(!addr || PatchDWord(hooker, (DWORD)functions - hooker->baseOffset, (DWORD)addr - (DWORD)hooker->hModule)))
 					{
 						if (old_val)
-							*old_val = res;
+							*old_val = (DWORD)hooker->hModule + res;
 
 						return (DWORD)functions - hooker->baseOffset;
 					}
