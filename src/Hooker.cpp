@@ -113,11 +113,19 @@ VOID CreateInner(HOOKER hooker, HANDLE hHeap, HMODULE hModule)
 	hooker->hHeap = hHeap;
 	hooker->hModule = hModule;
 	hooker->headNT = (PIMAGE_NT_HEADERS)((DWORD)hooker->hModule + ((PIMAGE_DOS_HEADER)hooker->hModule)->e_lfanew);
-	hooker->baseOffset = (INT)hooker->hModule - (INT)hooker->headNT->OptionalHeader.ImageBase;
-
+	
 	hooker->hFile = INVALID_HANDLE_VALUE;
 	hooker->hMap = NULL;
 	hooker->mapAddress = NULL;
+
+	if (MapFile(hooker))
+	{
+		PIMAGE_NT_HEADERS headNT = (PIMAGE_NT_HEADERS)(hooker->mapAddress + ((PIMAGE_DOS_HEADER)hooker->mapAddress)->e_lfanew);
+		hooker->baseOffset = *(INT*)&hooker->hModule - *(INT*)&headNT->OptionalHeader.ImageBase;
+		UnmapFile(hooker);
+	}
+	else
+		hooker->baseOffset = *(INT*)&hooker->hModule - *(INT*)&hooker->headNT->OptionalHeader.ImageBase;
 }
 
 VOID ReleaseInner(HOOKER hooker)
