@@ -143,7 +143,7 @@ VOID ReleaseHooker(HOOKER hooker)
 
 DWORD GetBaseOffset(HOOKER hooker)
 {
-	return hooker->baseOffset;
+	return hooker ? hooker->baseOffset : 0;
 }
 
 HMODULE GetHookerModule(HOOKER hooker)
@@ -153,7 +153,7 @@ HMODULE GetHookerModule(HOOKER hooker)
 
 BOOL ReadBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 {
-	DWORD address = addr + hooker->baseOffset;
+	DWORD address = addr + GetBaseOffset(hooker);
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_READONLY, &old_prot))
@@ -389,7 +389,7 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 
 BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWORD nop)
 {
-	DWORD address = addr + hooker->baseOffset;
+	DWORD address = addr + GetBaseOffset(hooker);
 
 	DWORD size = type == REDIRECT_JUMP_SHORT ? 2 : 5;
 
@@ -418,7 +418,7 @@ BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWO
 
 BOOL PatchJump(HOOKER hooker, DWORD addr, DWORD dest)
 {
-	INT relative = dest - addr - hooker->baseOffset - 2;
+	INT relative = dest - addr - GetBaseOffset(hooker) - 2;
 	return PatchRedirect(hooker, addr, dest, relative >= -128 && relative <= 127 ? REDIRECT_JUMP_SHORT : REDIRECT_JUMP, 0);
 }
 
@@ -434,7 +434,7 @@ BOOL PatchCall(HOOKER hooker, DWORD addr, const VOID* hook, DWORD nop)
 
 BOOL PatchSet(HOOKER hooker, DWORD addr, BYTE byte, DWORD size)
 {
-	DWORD address = addr + hooker->baseOffset;
+	DWORD address = addr + GetBaseOffset(hooker);
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -495,7 +495,7 @@ BOOL PatchHex(HOOKER hooker, DWORD addr, const CHAR* block)
 	else if (!size)
 		return FALSE;
 
-	DWORD address = addr + hooker->baseOffset;
+	DWORD address = addr + GetBaseOffset(hooker);
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -545,7 +545,7 @@ BOOL PatchHex(HOOKER hooker, DWORD addr, const CHAR* block)
 
 BOOL PatchBlock(HOOKER hooker, DWORD addr, const VOID* block, DWORD size)
 {
-	DWORD address = addr + hooker->baseOffset;
+	DWORD address = addr + GetBaseOffset(hooker);
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -578,7 +578,7 @@ BOOL PatchBlock(HOOKER hooker, DWORD addr, const VOID* block, DWORD size)
 
 BOOL PatchBlockByMask(HOOKER hooker, DWORD addr, const VOID* block, const VOID* mask, DWORD size)
 {
-	DWORD address = addr + hooker->baseOffset;
+	DWORD address = addr + GetBaseOffset(hooker);
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -667,7 +667,7 @@ DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 	BYTE block[5];
 	if (ReadBlock(hooker, addr, block, sizeof(block)) && block[0] == 0xE8 &&
 		PatchCall(hooker, addr, hook))
-		return addr + 5 + *(DWORD*)&block[1] + hooker->baseOffset;
+		return addr + 5 + *(DWORD*)&block[1] + GetBaseOffset(hooker);
 
 	return NULL;
 }
