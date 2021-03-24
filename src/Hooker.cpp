@@ -680,6 +680,25 @@ DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 	return NULL;
 }
 
+DWORD RedirectCalls(HOOKER hooker, DWORD addr, const VOID* hook, DWORD flags, DWORD* count)
+{
+	DWORD idx = 0;
+
+	DWORD found = FindCall(hooker, addr, flags);
+	while (found)
+	{
+		if (PatchCall(hooker, found, hook))
+			++idx;
+
+		found = FindCall(hooker, addr, flags, found + 5);
+	}
+
+	if (count)
+		*count = idx;
+
+	return addr + hooker->baseOffset;
+}
+
 DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_val, BOOL erace)
 {
 	if (old_val)

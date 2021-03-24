@@ -89,6 +89,7 @@ extern "C"
 	BOOL PatchFloat(HOOKER, DWORD, FLOAT);
 	BOOL PatchDouble(HOOKER, DWORD, DOUBLE);
 	DWORD RedirectCall(HOOKER, DWORD, const VOID*);
+	DWORD RedirectCalls(HOOKER, DWORD, const VOID*, DWORD = 0, DWORD* = NULL);
 	DWORD PatchImport(HOOKER, DWORD, const VOID*, DWORD*, BOOL = FALSE);
 	DWORD PatchImportByName(HOOKER, const CHAR*, const VOID* = NULL, DWORD* = NULL, BOOL = FALSE);
 	DWORD PatchImportByOrdinal(HOOKER, DWORD, const VOID* = NULL, DWORD* = NULL, BOOL = FALSE);

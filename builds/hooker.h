@@ -381,13 +381,24 @@ extern "C"
 	BOOL __stdcall PatchDouble(HOOKER hooker, DWORD address, DOUBLE value);
 
 	/// <summary>
-	/// Redirect relative call to new address
+	/// Redirect relative function call to new address
 	/// </summary>
 	/// <param name="hooker"></param>
 	/// <param name="address"></param>
 	/// <param name="funcAddress"></param>
 	/// <returns></returns>
 	DWORD __stdcall RedirectCall(HOOKER hooker, DWORD address, const VOID* funcAddress);
+	
+	/// <summary>
+	/// Redirect all relative function calls to new address
+	/// </summary>
+	/// <param name="hooker"></param>
+	/// <param name="address"></param>
+	/// <param name="funcAddress"></param>
+	/// <param name="flags"></param>
+	/// <param name="count"></param>
+	/// <returns></returns>
+	DWORD __stdcall RedirectCalls(HOOKER hooker, DWORD address, const VOID* funcAddress, DWORD flags = 0, DWORD* count = NULL);
 
 	/// <summary>
 	/// Redirects module imported function and retrives old address
