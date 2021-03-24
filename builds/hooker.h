@@ -29,15 +29,24 @@
 #pragma comment(linker, "/DLL /ENTRY:HookMain@12")
 #endif  // _HOOKER_LIB
 
+#include "window.h"
+
+typedef VOID* HOOKER;
+
+#if !defined(DOUBLE)
+typedef double DOUBLE;
+#endif
+
+#if !defined(QWORD)
+typedef unsigned __int64 QWORD;
+#endif
+
 enum RedirectType
 {
 	REDIRECT_CALL = 0xE8,
 	REDIRECT_JUMP = 0xE9,
 	REDIRECT_JUMP_SHORT = 0xEB
 };
-
-typedef VOID* HOOKER;
-typedef unsigned __int64 QWORD;
 
 extern "C"
 {

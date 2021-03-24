@@ -24,15 +24,20 @@
 
 #pragma once
 
+#if !defined(DOUBLE)
+typedef double DOUBLE;
+#endif
+
+#if !defined(QWORD)
+typedef unsigned __int64 QWORD;
+#endif
+
 enum RedirectType
 {
 	REDIRECT_CALL = 0xE8,
 	REDIRECT_JUMP = 0xE9,
 	REDIRECT_JUMP_SHORT = 0xEB
 };
-
-//typedef VOID* HOOKER;
-typedef unsigned __int64 QWORD;
 
 typedef struct Hooker {
 	HANDLE hHeap;
