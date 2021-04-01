@@ -135,12 +135,21 @@ VOID ReleaseInner(HOOKER hooker)
 
 HOOKER CreateHooker(HMODULE hModule)
 {
-	HANDLE hHeap = GetProcessHeap();
-	HOOKER hooker = (HOOKER)HeapAlloc(hHeap, NULL, sizeof(Hooker));
-	if (hooker)
-		CreateInner(hooker, hHeap, hModule);
+	if (hModule)
+	{
+		HANDLE hHeap = GetProcessHeap();
+		if (hHeap)
+		{
+			HOOKER hooker = (HOOKER)HeapAlloc(hHeap, NULL, sizeof(Hooker));
+			if (hooker)
+			{
+				CreateInner(hooker, hHeap, hModule);
+				return hooker;
+			}
+		}
+	}
 
-	return hooker;
+	return NULL;
 }
 
 VOID ReleaseHooker(HOOKER hooker)
