@@ -716,8 +716,7 @@ DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_va
 	PIMAGE_DATA_DIRECTORY dataDir = &hooker->headNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 	if (dataDir->Size)
 	{
-		PIMAGE_IMPORT_DESCRIPTOR imports = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD)hooker->hModule + dataDir->VirtualAddress);
-		for (DWORD idx = 0; imports->Name; ++idx, ++imports)
+		for (PIMAGE_IMPORT_DESCRIPTOR imports = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD)hooker->hModule + dataDir->VirtualAddress); imports->Name; ++imports)
 		{
 			PIMAGE_THUNK_DATA addressThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + imports->FirstThunk);
 			PIMAGE_THUNK_DATA nameThunk;
@@ -850,66 +849,74 @@ DWORD PatchEntry(HOOKER hooker, const VOID* entryPoint)
 	return NULL;
 }
 
-VOID RedirectImports(HOOKER hooker, const CHAR* libName, HMODULE hLib)
+BOOL RedirectImports(HOOKER hooker, const CHAR* libName, HMODULE hLib)
 {
+	BOOL res = FALSE;
+
 	PIMAGE_DATA_DIRECTORY dataDir = &hooker->headNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 	if (dataDir->Size)
 	{
-		PIMAGE_IMPORT_DESCRIPTOR imports = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD)hooker->hModule + dataDir->VirtualAddress);
-		for (DWORD idx = 0; imports->Name; ++idx, ++imports)
+		for (PIMAGE_IMPORT_DESCRIPTOR imports = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD)hooker->hModule + dataDir->VirtualAddress); imports->Name; ++imports)
 		{
 			CHAR* libraryName = (CHAR*)((DWORD)hooker->hModule + imports->Name);
 			if (!lstrcmpi(libraryName, libName))
 			{
-				PIMAGE_THUNK_DATA addressThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + imports->FirstThunk);
-				PIMAGE_THUNK_DATA nameThunk;
-
-				DWORD nameInternal = imports->OriginalFirstThunk;
-				if (nameInternal)
-					nameThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + nameInternal);
-				else if (MapFile(hooker))
+				if (hLib)
 				{
-					PIMAGE_NT_HEADERS headNT = (PIMAGE_NT_HEADERS)((DWORD)hooker->mapAddress + ((PIMAGE_DOS_HEADER)hooker->mapAddress)->e_lfanew);
-					PIMAGE_SECTION_HEADER sh = (PIMAGE_SECTION_HEADER)((DWORD)&headNT->OptionalHeader + headNT->FileHeader.SizeOfOptionalHeader);
+					PIMAGE_THUNK_DATA addressThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + imports->FirstThunk);
+					PIMAGE_THUNK_DATA nameThunk;
 
-					nameThunk = NULL;
-					DWORD sCount = headNT->FileHeader.NumberOfSections;
-					while (sCount--)
+					DWORD nameInternal = imports->OriginalFirstThunk;
+					if (nameInternal)
+						nameThunk = (PIMAGE_THUNK_DATA)((DWORD)hooker->hModule + nameInternal);
+					else if (MapFile(hooker))
 					{
-						if (imports->FirstThunk >= sh->VirtualAddress && imports->FirstThunk < sh->VirtualAddress + sh->Misc.VirtualSize)
+						PIMAGE_NT_HEADERS headNT = (PIMAGE_NT_HEADERS)((DWORD)hooker->mapAddress + ((PIMAGE_DOS_HEADER)hooker->mapAddress)->e_lfanew);
+						PIMAGE_SECTION_HEADER sh = (PIMAGE_SECTION_HEADER)((DWORD)&headNT->OptionalHeader + headNT->FileHeader.SizeOfOptionalHeader);
+
+						nameThunk = NULL;
+						DWORD sCount = headNT->FileHeader.NumberOfSections;
+						while (sCount--)
 						{
-							nameThunk = PIMAGE_THUNK_DATA((DWORD)hooker->mapAddress + sh->PointerToRawData + imports->FirstThunk - sh->VirtualAddress);
-							break;
+							if (imports->FirstThunk >= sh->VirtualAddress && imports->FirstThunk < sh->VirtualAddress + sh->Misc.VirtualSize)
+							{
+								nameThunk = PIMAGE_THUNK_DATA((DWORD)hooker->mapAddress + sh->PointerToRawData + imports->FirstThunk - sh->VirtualAddress);
+								break;
+							}
+
+							++sh;
 						}
 
-						++sh;
+						if (!nameThunk)
+							return FALSE;
 					}
+					else
+						return FALSE;
 
-					if (!nameThunk)
-						return;
+					for (; nameThunk->u1.AddressOfData; ++nameThunk, ++addressThunk)
+					{
+						PIMAGE_IMPORT_BY_NAME name = PIMAGE_IMPORT_BY_NAME((DWORD)hooker->hModule + (DWORD)nameThunk->u1.AddressOfData);
+
+						WORD hint;
+						if (ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint))
+						{
+							DWORD old;
+							DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
+							if (ReadDWord(hooker, address, &old))
+							{
+								FARPROC addr = GetProcAddress(hLib, (CHAR*)name->Name);
+								if (addr && PatchPtr(hooker, address, addr))
+									res = TRUE;
+							}
+						}
+					}
 				}
 				else
-					return;
-
-				for (; nameThunk->u1.AddressOfData; ++nameThunk, ++addressThunk)
-				{
-					PIMAGE_IMPORT_BY_NAME name = PIMAGE_IMPORT_BY_NAME((DWORD)hooker->hModule + (DWORD)nameThunk->u1.AddressOfData);
-
-					WORD hint;
-					if (ReadWord(hooker, (DWORD)&name->Hint - hooker->baseOffset, &hint))
-					{
-						DWORD old;
-						DWORD address = (DWORD)&addressThunk->u1.AddressOfData - hooker->baseOffset;
-						if (ReadDWord(hooker, address, &old))
-						{
-							FARPROC addr = GetProcAddress(hLib, (CHAR*)name->Name);
-							if (addr)
-								PatchPtr(hooker, address, addr);
-						}
-					}
-				}
+					res = TRUE;
 			}
 		}
 	}
+	
+	return res;
 }
 #pragma optimize("", on)
