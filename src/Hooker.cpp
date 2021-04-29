@@ -693,14 +693,8 @@ DWORD RedirectCalls(HOOKER hooker, DWORD addr, const VOID* hook, DWORD flags, DW
 {
 	DWORD idx = 0;
 
-	DWORD found = FindCall(hooker, addr, flags);
-	while (found)
-	{
-		if (PatchCall(hooker, found, hook))
-			++idx;
-
-		found = FindCall(hooker, addr, flags, found + 5);
-	}
+	for (DWORD found = FindCall(hooker, addr, flags); found; found = FindCall(hooker, addr, flags, found + 5), ++idx)
+		PatchCall(hooker, found, hook);
 
 	if (count)
 		*count = idx;
