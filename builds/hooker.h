@@ -208,7 +208,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindPtr(HOOKER hooker, const VOID* value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindPtr(HOOKER hooker, const VOID* value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find byte value
@@ -218,7 +218,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindByte(HOOKER hooker, BYTE value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindByte(HOOKER hooker, BYTE value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find word value
@@ -228,7 +228,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindWord(HOOKER hooker, WORD value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindWord(HOOKER hooker, WORD value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find double word value
@@ -238,7 +238,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindDWord(HOOKER hooker, DWORD value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindDWord(HOOKER hooker, DWORD value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find quad word value
@@ -248,7 +248,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindQWord(HOOKER hooker, QWORD value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindQWord(HOOKER hooker, QWORD value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find short value
@@ -258,7 +258,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindShort(HOOKER hooker, SHORT value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindShort(HOOKER hooker, SHORT value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find long value
@@ -268,7 +268,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindLong(HOOKER hooker, LONG value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindLong(HOOKER hooker, LONG value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find long long value
@@ -278,7 +278,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindLongLong(HOOKER hooker, LONGLONG value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindLongLong(HOOKER hooker, LONGLONG value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find float value
@@ -288,7 +288,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindFloat(HOOKER hooker, FLOAT value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindFloat(HOOKER hooker, FLOAT value, DWORD flags = 0, DWORD start = 0);
 
 	/// <summary>
 	/// Find double float value
@@ -298,7 +298,7 @@ extern "C"
 	/// <param name="flags"></param>
 	/// <param name="start"></param>
 	/// <returns></returns>
-	DWORD FindDouble(HOOKER hooker, DOUBLE value, DWORD flags = 0, DWORD start = 0);
+	DWORD __stdcall FindDouble(HOOKER hooker, DOUBLE value, DWORD flags = 0, DWORD start = 0);
 	
 	/// <summary>
 	/// Find relative function call
@@ -498,7 +498,7 @@ extern "C"
 	/// <param name="size"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllBlocks(HOOKER hooker, const VOID* old_block, const VOID* new_block, DWORD size, DWORD flags = 0);
+	DWORD __stdcall PatchAllBlocks(HOOKER hooker, const VOID* old_block, const VOID* new_block, DWORD size, DWORD flags = 0);
 
 	/// <summary>
 	/// Writes all new data blocks by bit mask
@@ -511,7 +511,7 @@ extern "C"
 	/// <param name="size"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* old_block, const VOID* old_mask, const VOID* new_block, const VOID* new_mask, DWORD size, DWORD flags = 0);
+	DWORD __stdcall PatchAllBlocksByMask(HOOKER hooker, const VOID* old_block, const VOID* old_mask, const VOID* new_block, const VOID* new_mask, DWORD size, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new pointer values
@@ -521,7 +521,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllPtrs(HOOKER hooker, const VOID* old_value, const VOID* new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllPtrs(HOOKER hooker, const VOID* old_value, const VOID* new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new byte values
@@ -531,7 +531,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllBytes(HOOKER hooker, BYTE old_value, BYTE new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllBytes(HOOKER hooker, BYTE old_value, BYTE new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new word values
@@ -541,7 +541,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllWords(HOOKER hooker, WORD old_value, WORD new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllWords(HOOKER hooker, WORD old_value, WORD new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new double word values
@@ -551,7 +551,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllDWords(HOOKER hooker, DWORD old_value, DWORD new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllDWords(HOOKER hooker, DWORD old_value, DWORD new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new quad word values
@@ -561,7 +561,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllQWords(HOOKER hooker, QWORD old_value, QWORD new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllQWords(HOOKER hooker, QWORD old_value, QWORD new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new short values
@@ -571,7 +571,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllShorts(HOOKER hooker, SHORT old_value, SHORT new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllShorts(HOOKER hooker, SHORT old_value, SHORT new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new long values
@@ -581,7 +581,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllLongs(HOOKER hooker, LONG old_value, LONG new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllLongs(HOOKER hooker, LONG old_value, LONG new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new long long values
@@ -591,7 +591,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllLongLongs(HOOKER hooker, LONGLONG old_value, LONGLONG new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllLongLongs(HOOKER hooker, LONGLONG old_value, LONGLONG new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new float values
@@ -601,7 +601,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllFloats(HOOKER hooker, FLOAT old_value, FLOAT new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllFloats(HOOKER hooker, FLOAT old_value, FLOAT new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new double float values
@@ -611,7 +611,7 @@ extern "C"
 	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllDoubles(HOOKER hooker, DOUBLE old_value, DOUBLE new_value, DWORD flags = 0);
+	DWORD __stdcall PatchAllDoubles(HOOKER hooker, DOUBLE old_value, DOUBLE new_value, DWORD flags = 0);
 
 	/// <summary>
 	/// Redirect relative function call to new address
