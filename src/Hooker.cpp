@@ -729,72 +729,72 @@ BOOL PatchDouble(HOOKER hooker, DWORD addr, DOUBLE value)
 	return PatchBlock(hooker, addr, &value, sizeof(value));
 }
 
-DWORD PatchAllBlocks(HOOKER hooker, const VOID* block, DWORD size, DWORD flags)
+DWORD PatchAllBlocks(HOOKER hooker, const VOID* old_block, const VOID* new_block, DWORD size, DWORD flags)
 {
 	DWORD count = 0;
-	for (DWORD found = FindBlock(hooker, block, size, flags); found; found = FindBlock(hooker, block, size, found + size), ++count)
-		PatchBlock(hooker, found, block, size);
+	for (DWORD found = FindBlock(hooker, old_block, size, flags); found; found = FindBlock(hooker, old_block, size, found + size), ++count)
+		PatchBlock(hooker, found, new_block, size);
 
 	return count;
 }
 
-DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD size, DWORD flags)
+DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* old_block, const VOID* old_mask, const VOID* new_block, const VOID* new_mask, DWORD size, DWORD flags)
 {
 	DWORD count = 0;
-	for (DWORD found = FindBlockByMask(hooker, block, mask, size, flags); found; found = FindBlockByMask(hooker, block, mask, size, found + size), ++count)
-		PatchBlockByMask(hooker, found, block, mask, size);
+	for (DWORD found = FindBlockByMask(hooker, old_block, old_mask, size, flags); found; found = FindBlockByMask(hooker, old_block, old_mask, size, found + size), ++count)
+		PatchBlockByMask(hooker, found, new_block, new_mask, size);
 
 	return count;
 }
 
-DWORD PatchAllPtrs(HOOKER hooker, DWORD addr, const VOID* value, DWORD flags)
+DWORD PatchAllPtrs(HOOKER hooker, const VOID* old_value, const VOID* new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllBytes(HOOKER hooker, DWORD addr, BYTE value, DWORD flags)
+DWORD PatchAllBytes(HOOKER hooker, BYTE old_value, BYTE new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllWords(HOOKER hooker, DWORD addr, WORD value, DWORD flags)
+DWORD PatchAllWords(HOOKER hooker, WORD old_value, WORD new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllDWords(HOOKER hooker, DWORD addr, DWORD value, DWORD flags)
+DWORD PatchAllDWords(HOOKER hooker, DWORD old_value, DWORD new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllQWords(HOOKER hooker, DWORD addr, QWORD value, DWORD flags)
+DWORD PatchAllQWords(HOOKER hooker, QWORD old_value, QWORD new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllShorts(HOOKER hooker, DWORD addr, SHORT value, DWORD flags)
+DWORD PatchAllShorts(HOOKER hooker, SHORT old_value, SHORT new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllLongs(HOOKER hooker, DWORD addr, LONG value, DWORD flags)
+DWORD PatchAllLongs(HOOKER hooker, LONG old_value, LONG new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllLongLongs(HOOKER hooker, DWORD addr, LONGLONG value, DWORD flags)
+DWORD PatchAllLongLongs(HOOKER hooker, LONGLONG old_value, LONGLONG new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllFloats(HOOKER hooker, DWORD addr, FLOAT value, DWORD flags)
+DWORD PatchAllFloats(HOOKER hooker, FLOAT old_value, FLOAT new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
-DWORD PatchAllDoubles(HOOKER hooker, DWORD addr, DOUBLE value, DWORD flags)
+DWORD PatchAllDoubles(HOOKER hooker, DOUBLE old_value, DOUBLE new_value, DWORD flags)
 {
-	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+	return PatchAllBlocks(hooker, &old_value, &new_value, sizeof(new_value), flags);
 }
 
 DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)

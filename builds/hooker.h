@@ -493,122 +493,125 @@ extern "C"
 	/// Writes all new data blocks
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="block"></param>
+	/// <param name="old_block"></param>
+	/// <param name="new_block"></param>
 	/// <param name="size"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllBlocks(HOOKER hooker, const VOID* block, DWORD size, DWORD flags = 0);
+	DWORD PatchAllBlocks(HOOKER hooker, const VOID* old_block, const VOID* new_block, DWORD size, DWORD flags = 0);
 
 	/// <summary>
 	/// Writes all new data blocks by bit mask
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="block"></param>
-	/// <param name="mask"></param>
+	/// <param name="old_block"></param>
+	/// <param name="old_mask"></param>
+	/// <param name="new_block"></param>
+	/// <param name="new_mask"></param>
 	/// <param name="size"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD size, DWORD flags = 0);
+	DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* old_block, const VOID* old_mask, const VOID* new_block, const VOID* new_mask, DWORD size, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new pointer values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllPtrs(HOOKER hooker, DWORD addr, const VOID* value, DWORD flags = 0);
+	DWORD PatchAllPtrs(HOOKER hooker, const VOID* old_value, const VOID* new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new byte values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllBytes(HOOKER hooker, DWORD addr, BYTE value, DWORD flags = 0);
+	DWORD PatchAllBytes(HOOKER hooker, BYTE old_value, BYTE new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new word values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllWords(HOOKER hooker, DWORD addr, WORD value, DWORD flags = 0);
+	DWORD PatchAllWords(HOOKER hooker, WORD old_value, WORD new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new double word values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllDWords(HOOKER hooker, DWORD addr, DWORD value, DWORD flags = 0);
+	DWORD PatchAllDWords(HOOKER hooker, DWORD old_value, DWORD new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new quad word values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllQWords(HOOKER hooker, DWORD addr, QWORD value, DWORD flags = 0);
+	DWORD PatchAllQWords(HOOKER hooker, QWORD old_value, QWORD new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new short values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllShorts(HOOKER hooker, DWORD addr, SHORT value, DWORD flags = 0);
+	DWORD PatchAllShorts(HOOKER hooker, SHORT old_value, SHORT new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new long values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllLongs(HOOKER hooker, DWORD addr, LONG value, DWORD flags = 0);
+	DWORD PatchAllLongs(HOOKER hooker, LONG old_value, LONG new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new long long values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllLongLongs(HOOKER hooker, DWORD addr, LONGLONG value, DWORD flags = 0);
+	DWORD PatchAllLongLongs(HOOKER hooker, LONGLONG old_value, LONGLONG new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new float values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllFloats(HOOKER hooker, DWORD addr, FLOAT value, DWORD flags = 0);
+	DWORD PatchAllFloats(HOOKER hooker, FLOAT old_value, FLOAT new_value, DWORD flags = 0);
 	
 	/// <summary>
 	/// Writes all new double float values
 	/// </summary>
 	/// <param name="hooker"></param>
-	/// <param name="addr"></param>
-	/// <param name="value"></param>
+	/// <param name="old_value"></param>
+	/// <param name="new_value"></param>
 	/// <param name="flags"></param>
 	/// <returns></returns>
-	DWORD PatchAllDoubles(HOOKER hooker, DWORD addr, DOUBLE value, DWORD flags = 0);
+	DWORD PatchAllDoubles(HOOKER hooker, DOUBLE old_value, DOUBLE new_value, DWORD flags = 0);
 
 	/// <summary>
 	/// Redirect relative function call to new address
