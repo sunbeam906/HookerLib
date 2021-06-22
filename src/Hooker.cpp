@@ -732,7 +732,7 @@ BOOL PatchDouble(HOOKER hooker, DWORD addr, DOUBLE value)
 DWORD PatchAllBlocks(HOOKER hooker, const VOID* old_block, const VOID* new_block, DWORD size, DWORD flags)
 {
 	DWORD count = 0;
-	for (DWORD found = FindBlock(hooker, old_block, size, flags); found; found = FindBlock(hooker, old_block, size, found + size), ++count)
+	for (DWORD found = FindBlock(hooker, old_block, size, flags); found; found = FindBlock(hooker, old_block, size, flags, found + size), ++count)
 		PatchBlock(hooker, found, new_block, size);
 
 	return count;
@@ -741,7 +741,7 @@ DWORD PatchAllBlocks(HOOKER hooker, const VOID* old_block, const VOID* new_block
 DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* old_block, const VOID* old_mask, const VOID* new_block, const VOID* new_mask, DWORD size, DWORD flags)
 {
 	DWORD count = 0;
-	for (DWORD found = FindBlockByMask(hooker, old_block, old_mask, size, flags); found; found = FindBlockByMask(hooker, old_block, old_mask, size, found + size), ++count)
+	for (DWORD found = FindBlockByMask(hooker, old_block, old_mask, size, flags); found; found = FindBlockByMask(hooker, old_block, old_mask, size, flags, found + size), ++count)
 		PatchBlockByMask(hooker, found, new_block, new_mask, size);
 
 	return count;
