@@ -170,7 +170,7 @@ HMODULE GetHookerModule(HOOKER hooker)
 
 BOOL ReadBlock(HOOKER hooker, DWORD addr, VOID* block, DWORD size)
 {
-	DWORD address = addr + GetBaseOffset(hooker);
+	DWORD address = addr + hooker->baseOffset;
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_READONLY, &old_prot))
@@ -354,6 +354,56 @@ DWORD FindBlockByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD 
 	return res;
 }
 
+DWORD FindPtr(HOOKER hooker, const VOID* value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindByte(HOOKER hooker, BYTE value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindWord(HOOKER hooker, WORD value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindDWord(HOOKER hooker, DWORD value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindQWord(HOOKER hooker, QWORD value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindShort(HOOKER hooker, SHORT value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindLong(HOOKER hooker, LONG value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindLongLong(HOOKER hooker, LONGLONG value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindFloat(HOOKER hooker, FLOAT value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
+DWORD FindDouble(HOOKER hooker, DOUBLE value, DWORD flags, DWORD start)
+{
+	return FindBlock(hooker, &value, sizeof(value), flags, start);
+}
+
 DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 {
 	DWORD res = 0;
@@ -406,7 +456,7 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 
 BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWORD nop)
 {
-	DWORD address = addr + GetBaseOffset(hooker);
+	DWORD address = addr + hooker->baseOffset;
 
 	DWORD size = type == REDIRECT_JUMP_SHORT ? 2 : 5;
 
@@ -435,7 +485,7 @@ BOOL PatchRedirect(HOOKER hooker, DWORD addr, DWORD dest, RedirectType type, DWO
 
 BOOL PatchJump(HOOKER hooker, DWORD addr, DWORD dest)
 {
-	INT relative = dest - addr - GetBaseOffset(hooker) - 2;
+	INT relative = dest - addr - hooker->baseOffset - 2;
 	return PatchRedirect(hooker, addr, dest, relative >= -128 && relative <= 127 ? REDIRECT_JUMP_SHORT : REDIRECT_JUMP, 0);
 }
 
@@ -451,7 +501,7 @@ BOOL PatchCall(HOOKER hooker, DWORD addr, const VOID* hook, DWORD nop)
 
 BOOL PatchSet(HOOKER hooker, DWORD addr, BYTE byte, DWORD size)
 {
-	DWORD address = addr + GetBaseOffset(hooker);
+	DWORD address = addr + hooker->baseOffset;
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -512,7 +562,7 @@ BOOL PatchHex(HOOKER hooker, DWORD addr, const CHAR* block)
 	else if (!size)
 		return FALSE;
 
-	DWORD address = addr + GetBaseOffset(hooker);
+	DWORD address = addr + hooker->baseOffset;
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -562,7 +612,7 @@ BOOL PatchHex(HOOKER hooker, DWORD addr, const CHAR* block)
 
 BOOL PatchBlock(HOOKER hooker, DWORD addr, const VOID* block, DWORD size)
 {
-	DWORD address = addr + GetBaseOffset(hooker);
+	DWORD address = addr + hooker->baseOffset;
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -595,7 +645,7 @@ BOOL PatchBlock(HOOKER hooker, DWORD addr, const VOID* block, DWORD size)
 
 BOOL PatchBlockByMask(HOOKER hooker, DWORD addr, const VOID* block, const VOID* mask, DWORD size)
 {
-	DWORD address = addr + GetBaseOffset(hooker);
+	DWORD address = addr + hooker->baseOffset;
 
 	DWORD old_prot;
 	if (VirtualProtect((VOID*)address, size, PAGE_EXECUTE_READWRITE, &old_prot))
@@ -679,27 +729,91 @@ BOOL PatchDouble(HOOKER hooker, DWORD addr, DOUBLE value)
 	return PatchBlock(hooker, addr, &value, sizeof(value));
 }
 
+DWORD PatchAllBlocks(HOOKER hooker, const VOID* block, DWORD size, DWORD flags)
+{
+	DWORD count = 0;
+	for (DWORD found = FindBlock(hooker, block, size, flags); found; found = FindBlock(hooker, block, size, found + size), ++count)
+		PatchBlock(hooker, found, block, size);
+
+	return count;
+}
+
+DWORD PatchAllBlocksByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD size, DWORD flags)
+{
+	DWORD count = 0;
+	for (DWORD found = FindBlockByMask(hooker, block, mask, size, flags); found; found = FindBlockByMask(hooker, block, mask, size, found + size), ++count)
+		PatchBlockByMask(hooker, found, block, mask, size);
+
+	return count;
+}
+
+DWORD PatchAllPtrs(HOOKER hooker, DWORD addr, const VOID* value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllBytes(HOOKER hooker, DWORD addr, BYTE value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllWords(HOOKER hooker, DWORD addr, WORD value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllDWords(HOOKER hooker, DWORD addr, DWORD value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllQWords(HOOKER hooker, DWORD addr, QWORD value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllShorts(HOOKER hooker, DWORD addr, SHORT value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllLongs(HOOKER hooker, DWORD addr, LONG value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllLongLongs(HOOKER hooker, DWORD addr, LONGLONG value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllFloats(HOOKER hooker, DWORD addr, FLOAT value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
+DWORD PatchAllDoubles(HOOKER hooker, DWORD addr, DOUBLE value, DWORD flags)
+{
+	return PatchAllBlocks(hooker, &value, sizeof(value), flags);
+}
+
 DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 {
 	BYTE block[5];
 	if (ReadBlock(hooker, addr, block, sizeof(block)) && block[0] == 0xE8 &&
 		PatchCall(hooker, addr, hook))
-		return addr + 5 + *(DWORD*)&block[1] + GetBaseOffset(hooker);
+		return addr + 5 + *(DWORD*)&block[1] + hooker->baseOffset;
 
 	return NULL;
 }
 
-DWORD RedirectCalls(HOOKER hooker, DWORD addr, const VOID* hook, DWORD flags, DWORD* count)
+DWORD RedirectAllCalls(HOOKER hooker, DWORD addr, const VOID* hook, DWORD flags)
 {
-	DWORD idx = 0;
-
-	for (DWORD found = FindCall(hooker, addr, flags); found; found = FindCall(hooker, addr, flags, found + 5), ++idx)
+	DWORD count = 0;
+	for (DWORD found = FindCall(hooker, addr, flags); found; found = FindCall(hooker, addr, flags, found + 5), ++count)
 		PatchCall(hooker, found, hook);
 
-	if (count)
-		*count = idx;
-
-	return addr + hooker->baseOffset;
+	return count;
 }
 
 DWORD PatchImport(HOOKER hooker, DWORD function, const VOID* addr, DWORD* old_val, BOOL erace)
