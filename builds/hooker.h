@@ -614,6 +614,16 @@ extern "C"
 	DWORD __stdcall PatchAllDoubles(HOOKER hooker, DOUBLE old_value, DOUBLE new_value, DWORD flags = 0);
 
 	/// <summary>
+	/// Patch virtual function of object by its index
+	/// </summary>
+	/// <param name="obj"></param>
+	/// <param name="index"></param>
+	/// <param name="funct"></param>
+	/// <param name="old_value"></param>
+	/// <returns></returns>
+	BOOL __stdcall PatchVirtual(const VOID* obj, DWORD index, const VOID* funct, VOID* old_value = NULL);
+
+	/// <summary>
 	/// Redirect relative function call to new address
 	/// </summary>
 	/// <param name="hooker"></param>

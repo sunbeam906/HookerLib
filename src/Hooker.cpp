@@ -800,6 +800,28 @@ DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 	return NULL;
 }
 
+BOOL PatchVirtual(const VOID* obj, DWORD index, const VOID* funct, VOID* old_value)
+{
+	BOOL res = FALSE;
+
+	DWORD* address = &((DWORD**)obj)[0][index];
+	DWORD old_prot;
+	if (VirtualProtect(address, sizeof(DWORD), PAGE_EXECUTE_READWRITE, &old_prot))
+	{
+		if (*address != (DWORD)funct)
+		{
+			if (old_value)
+				*(DWORD*)old_value = *address;
+			*address = (DWORD)funct;
+		}
+
+		res = TRUE;
+		VirtualProtect(address, sizeof(DWORD), old_prot, &old_prot);
+	}
+
+	return res;
+}
+
 DWORD RedirectAllCalls(HOOKER hooker, DWORD addr, const VOID* hook, DWORD flags)
 {
 	DWORD count = 0;

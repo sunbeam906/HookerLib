@@ -115,6 +115,7 @@ extern "C"
 	DWORD PatchAllLongLongs(HOOKER, LONGLONG, LONGLONG, DWORD = 0);
 	DWORD PatchAllFloats(HOOKER, FLOAT, FLOAT, DWORD = 0);
 	DWORD PatchAllDoubles(HOOKER, DOUBLE, DOUBLE, DWORD = 0);
+	BOOL PatchVirtual(const VOID*, DWORD, const VOID*, VOID* = NULL);
 	DWORD RedirectCall(HOOKER, DWORD, const VOID*);
 	DWORD RedirectAllCalls(HOOKER, DWORD, const VOID*, DWORD = 0);
 	DWORD PatchImport(HOOKER, DWORD, const VOID*, DWORD*, BOOL = FALSE);
