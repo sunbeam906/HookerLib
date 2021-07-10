@@ -262,15 +262,14 @@ DWORD FindBlock(HOOKER hooker, const VOID* block, DWORD size, DWORD flags, DWORD
 		if (!flags || (section->Characteristics & flags) == flags)
 		{
 			DWORD old_prot;
-			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
-			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
+			DWORD startAddress = (DWORD)hooker->hModule + section->VirtualAddress;
+			if (startAddress + section->Misc.VirtualSize > start && VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				DWORD max = startAddress >= start ? startAddress : start;
-				BYTE* entry = (BYTE*)(max + hooker->baseOffset);
-				DWORD total = section->SizeOfRawData - size - max + startAddress;
+				DWORD entry = max(start, startAddress);
+				DWORD total = section->Misc.VirtualSize - size - entry + startAddress;
 				do
 				{
-					BYTE* ptr1 = entry;
+					BYTE* ptr1 = (BYTE*)entry;
 					BYTE* ptr2 = (BYTE*)block;
 
 					DWORD count = size;
@@ -285,7 +284,7 @@ DWORD FindBlock(HOOKER hooker, const VOID* block, DWORD size, DWORD flags, DWORD
 					++entry;
 				} while (--total);
 
-				VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+				VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, old_prot, &old_prot);
 				if (res)
 					break;
 			}
@@ -305,15 +304,14 @@ DWORD FindBlockByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD 
 		if (!flags || (section->Characteristics & flags) == flags)
 		{
 			DWORD old_prot;
-			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
-			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
+			DWORD startAddress = (DWORD)hooker->hModule + section->VirtualAddress;
+			if (startAddress + section->Misc.VirtualSize > start && VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				DWORD max = startAddress >= start ? startAddress : start;
-				BYTE* entry = (BYTE*)(max + hooker->baseOffset);
-				DWORD total = section->SizeOfRawData - size - max + startAddress;
+				DWORD entry = max(start, startAddress);
+				DWORD total = section->Misc.VirtualSize - size - entry + startAddress;
 				do
 				{
-					BYTE* ptr1 = entry;
+					BYTE* ptr1 = (BYTE*)entry;
 					BYTE* ptr2 = (BYTE*)block;
 					BYTE* msk = (BYTE*)mask;
 
@@ -344,7 +342,7 @@ DWORD FindBlockByMask(HOOKER hooker, const VOID* block, const VOID* mask, DWORD 
 					++entry;
 				} while (--total);
 
-				VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+				VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, old_prot, &old_prot);
 				if (res)
 					break;
 			}
@@ -417,22 +415,18 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 		if (!flags || (section->Characteristics & flags) == flags)
 		{
 			DWORD old_prot;
-			DWORD startAddress = hooker->headNT->OptionalHeader.ImageBase + section->VirtualAddress;
-			if (startAddress + section->SizeOfRawData > start && VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, PAGE_EXECUTE_READWRITE, &old_prot))
+			DWORD startAddress = (DWORD)hooker->hModule + section->VirtualAddress;
+			if (startAddress + section->Misc.VirtualSize > start && VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
-				DWORD max = startAddress >= start ? startAddress : start;
-				BYTE* entry = (BYTE*)(max + hooker->baseOffset);
-				*ptr = *(LONG*)&addr - (LONG)entry - sizeof(block);
-
-				DWORD total = section->SizeOfRawData - sizeof(block) - max + startAddress;
+				DWORD entry = max(start, startAddress);
+				DWORD total = section->Misc.VirtualSize - sizeof(block) - entry + startAddress;
 				do
 				{
-					BYTE* ptr1 = entry;
+					BYTE* ptr1 = (BYTE*)entry;
 					BYTE* ptr2 = (BYTE*)block;
 
 					DWORD count = sizeof(block);
-					while (*ptr1++ == *ptr2++ && --count)
-						;
+					while (*ptr1++ == *ptr2++ && --count);
 
 					if (!count)
 					{
@@ -441,10 +435,9 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 					}
 
 					++entry;
-					--*ptr;
 				} while (--total);
 
-				VirtualProtect((VOID*)(startAddress), section->SizeOfRawData, old_prot, &old_prot);
+				VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, old_prot, &old_prot);
 				if (res)
 					break;
 			}
