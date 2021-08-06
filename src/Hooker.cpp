@@ -419,6 +419,7 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 			if (startAddress + section->Misc.VirtualSize > start && VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, PAGE_EXECUTE_READWRITE, &old_prot))
 			{
 				DWORD entry = max(start, startAddress);
+				*ptr = *(LONG*)&addr - *(LONG*)&entry - sizeof(block);
 				DWORD total = section->Misc.VirtualSize - sizeof(block) - entry + startAddress;
 				do
 				{
@@ -435,6 +436,7 @@ DWORD FindCall(HOOKER hooker, DWORD addr, DWORD flags, DWORD start)
 					}
 
 					++entry;
+					--*ptr;
 				} while (--total);
 
 				VirtualProtect((VOID*)(startAddress), section->Misc.VirtualSize, old_prot, &old_prot);
@@ -793,8 +795,7 @@ DWORD PatchAllDoubles(HOOKER hooker, DOUBLE old_value, DOUBLE new_value, DWORD f
 DWORD RedirectCall(HOOKER hooker, DWORD addr, const VOID* hook)
 {
 	BYTE block[5];
-	if (ReadBlock(hooker, addr, block, sizeof(block)) && block[0] == 0xE8 &&
-		PatchCall(hooker, addr, hook))
+	if (ReadBlock(hooker, addr, block, sizeof(block)) && block[0] == 0xE8 && PatchCall(hooker, addr, hook))
 		return addr + 5 + *(DWORD*)&block[1] + hooker->baseOffset;
 
 	return NULL;
